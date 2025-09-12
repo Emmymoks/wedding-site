@@ -23,7 +23,7 @@ export default function Gallery() {
       setImages(imgRes.data)
       setVideos(vidRes.data)
 
-      // Merge into single array for lightbox navigation
+      // Combine into one array for modal navigation
       const combined = [
         ...imgRes.data.map(i => ({ ...i, type: 'image' })),
         ...vidRes.data.map(v => ({ ...v, type: 'video' }))
@@ -44,12 +44,12 @@ export default function Gallery() {
   }, [])
 
   const nextItem = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % allItems.length)
-  }, [allItems])
+    setCurrentIndex((currentIndex + 1) % allItems.length)
+  }, [currentIndex, allItems])
 
   const prevItem = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + allItems.length) % allItems.length)
-  }, [allItems])
+    setCurrentIndex((currentIndex - 1 + allItems.length) % allItems.length)
+  }, [currentIndex, allItems])
 
   return (
     <div className="space-y-6">
@@ -133,7 +133,7 @@ export default function Gallery() {
               <ChevronRight size={32} />
             </button>
 
-            {/* Lightbox Content with swipe */}
+            {/* Lightbox Content */}
             <motion.div
               key={currentIndex}
               className="max-w-4xl w-full px-4"
@@ -141,17 +141,6 @@ export default function Gallery() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(e, { offset, velocity }) => {
-                const swipe = offset.x * velocity.x
-                if (swipe < -1000) {
-                  nextItem()
-                } else if (swipe > 1000) {
-                  prevItem()
-                }
-              }}
             >
               {allItems[currentIndex]?.type === 'image' ? (
                 <img
