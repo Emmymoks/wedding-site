@@ -5,12 +5,13 @@ import { useNavigate } from 'react-router-dom'
 export default function Home() {
   const [latest, setLatest] = useState([])
   const nav = useNavigate()
+  const base = import.meta.env.VITE_BACKEND_URL
 
   // try to load a small preview; if backend not available it's okay
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/gallery?type=image')
+        const res = await fetch(`${base}/api/gallery?type=image`)
         if (!res.ok) return
         const data = await res.json()
         setLatest(data.slice(0, 4))
@@ -18,7 +19,7 @@ export default function Home() {
         // silently ignore — preview will be static
       }
     })()
-  }, [])
+  }, [base])
 
   // static fallback images if API returns nothing
   const fallback = [
@@ -28,7 +29,8 @@ export default function Home() {
     'https://ik.imagekit.io/emmymoks/couple.jpg?updatedAt=1757704492103'
   ]
 
-  const previewItems = latest.length ? latest.map(i => `/api/files/${i.id}`) : fallback
+  // use backend file links if available, otherwise fallback
+  const previewItems = latest.length ? latest.map(i => `${base}/api/files/${i.id}`) : fallback
 
   return (
     <div className="space-y-6">
