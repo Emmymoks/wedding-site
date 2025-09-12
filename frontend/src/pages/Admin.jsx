@@ -9,11 +9,12 @@ export default function Admin() {
   const [resetKey, setResetKey] = useState('')
   const [newPass, setNewPass] = useState('')
   const nav = useNavigate()
+  const base = import.meta.env.VITE_BACKEND_URL
 
   async function login(e) {
     e.preventDefault()
     try {
-      const res = await axios.post('/api/auth/login', { username, password })
+      const res = await axios.post(`${base}/api/auth/login`, { username, password })
       localStorage.setItem('token', res.data.token)
       nav('/admin/dashboard')
     } catch {
@@ -24,7 +25,11 @@ export default function Admin() {
   async function reset(e) {
     e.preventDefault()
     try {
-      await axios.post('/api/auth/reset-password', { username, newPassword: newPass, secretKey: resetKey })
+      await axios.post(`${base}/api/auth/reset-password`, {
+        username,
+        newPassword: newPass,
+        secretKey: resetKey
+      })
       alert('Password reset OK. Use new password to login.')
     } catch {
       alert('Reset failed')
