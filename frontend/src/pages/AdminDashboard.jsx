@@ -13,6 +13,7 @@ export default function AdminDashboard() {
   const [scanResult, setScanResult] = useState('')
   const token = localStorage.getItem('token')
   const scannerRef = useRef(null)
+  const base = import.meta.env.VITE_BACKEND_URL
 
   useEffect(() => {
     if (!token) nav('/admin')
@@ -21,22 +22,33 @@ export default function AdminDashboard() {
 
   async function fetchAll() {
     try {
-      const g = await axios.get('/api/guests', { headers: { Authorization: 'Bearer ' + token } })
+      const g = await axios.get(`${base}/api/guests`, { headers: { Authorization: 'Bearer ' + token } })
       setGuests(g.data)
-      const f = await axios.get('/api/uploads', { headers: { Authorization: 'Bearer ' + token } })
+      const f = await axios.get(`${base}/api/uploads`, { headers: { Authorization: 'Bearer ' + token } })
       setFiles(f.data)
     } catch (e) { console.error(e) }
   }
 
   async function addGuest(e) {
     e.preventDefault()
-    await axios.post('/api/guests', { firstName: first, lastName: last }, { headers: { Authorization: 'Bearer ' + token } })
+    await axios.post(`${base}/api/guests`, { firstName: first, lastName: last }, { headers: { Authorization: 'Bearer ' + token } })
     setFirst(''); setLast(''); fetchAll()
   }
 
-  async function deleteGuest(id) { await axios.delete('/api/guests/' + id, { headers: { Authorization: 'Bearer ' + token } }); fetchAll() }
-  async function approveFile(id) { await axios.post('/api/uploads/' + id + '/approve', {}, { headers: { Authorization: 'Bearer ' + token } }); fetchAll() }
-  async function deleteFile(id) { await axios.delete('/api/uploads/' + id, { headers: { Authorization: 'Bearer ' + token } }); fetchAll() }
+  async function deleteGuest(id) {
+    await axios.delete(`${base}/api/guests/${id}`, { headers: { Authorization: 'Bearer ' + token } })
+    fetchAll()
+  }
+
+  async function approveFile(id) {
+    await axios.post(`${base}/api/uploads/${id}/approve`, {}, { headers: { Authorization: 'Bearer ' + token } })
+    fetchAll()
+  }
+
+  async function deleteFile(id) {
+    await axios.delete(`${base}/api/uploads/${id}`, { headers: { Authorization: 'Bearer ' + token } })
+    fetchAll()
+  }
 
   async function startScanner() {
     setScanResult('')
@@ -55,7 +67,10 @@ export default function AdminDashboard() {
     } catch (e) { console.error(e) }
   }
 
-  async function stopScanner() { if (scannerRef.current) await scannerRef.current.stop(); scannerRef.current = null }
+  async function stopScanner() {
+    if (scannerRef.current) await scannerRef.current.stop()
+    scannerRef.current = null
+  }
 
   function checkGuest(decoded) {
     const norm = decoded.trim().toLowerCase()
@@ -144,10 +159,10 @@ export default function AdminDashboard() {
             >
               {f.mimetype && f.mimetype.startsWith('video') ? (
                 <video controls style={{ width: '100%', height: 160, objectFit: 'cover' }}>
-                  <source src={`/api/files/${f._id}`} />
+                  <source src={`${base}/api/files/${f._id}`} />
                 </video>
               ) : (
-                <img src={`/api/files/${f._id}`} alt={f.filename} style={{ width: '100%', height: 160, objectFit: 'cover' }} />
+                <img src={`${base}/api/files/${f._id}`} alt={f.filename} style={{ width: '100%', height: 160, objectFit: 'cover' }} />
               )}
               <div className="photo-meta" style={{ padding: 12 }}>
                 <span style={{ display: 'block', marginBottom: 8 }}>
