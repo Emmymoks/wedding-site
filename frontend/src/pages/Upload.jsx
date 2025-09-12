@@ -6,6 +6,7 @@ export default function Upload() {
   const [files, setFiles] = useState(null)
   const [uploader, setUploader] = useState('')
   const [status, setStatus] = useState('')
+  const base = import.meta.env.VITE_BACKEND_URL
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -17,7 +18,9 @@ export default function Upload() {
 
     try {
       setStatus('Uploading...')
-      await axios.post('/api/uploads', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+      await axios.post(`${base}/api/uploads`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
       setStatus('✅ Uploaded! Awaiting admin approval.')
     } catch (e) {
       console.error(e)
