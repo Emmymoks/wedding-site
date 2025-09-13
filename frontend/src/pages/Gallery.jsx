@@ -8,7 +8,7 @@ export default function Gallery() {
   const [videos, setVideos] = useState([])
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [currentType, setCurrentType] = useState('image')
+  const [allItems, setAllItems] = useState([])
 
   const base = import.meta.env.VITE_BACKEND_URL
 
@@ -22,233 +22,154 @@ export default function Gallery() {
       const vidRes = await axios.get(`${base}/api/gallery?type=video`)
       setImages(imgRes.data)
       setVideos(vidRes.data)
+
+      // Merge into single array for lightbox navigation
+      const combined = [
+        ...imgRes.data.map(i => ({ ...i, type: 'image' })),
+        ...vidRes.data.map(v => ({ ...v, type: 'video' }))
+      ]
+      setAllItems(combined)
     } catch (e) {
       console.error(e)
     }
   }
 
-  const openLightbox = useCallback((index, type) => {
+  const openLightbox = useCallback(index => {
     setCurrentIndex(index)
-    setCurrentType(type)
     setLightboxOpen(true)
-    document.body.style.overflow = 'hidden'
   }, [])
 
   const closeLightbox = useCallback(() => {
     setLightboxOpen(false)
-    document.body.style.overflow = 'auto'
   }, [])
 
   const nextItem = useCallback(() => {
-    if (currentType === 'image') {
-      setCurrentIndex(prev => (prev + 1) % images.length)
-    } else {
-      setCurrentIndex(prev => (prev + 1) % videos.length)
-    }
-  }, [currentType, images.length, videos.length])
+    setCurrentIndex((prev) => (prev + 1) % allItems.length)
+  }, [allItems])
 
   const prevItem = useCallback(() => {
-    if (currentType === 'image') {
-      setCurrentIndex(prev => (prev - 1 + images.length) % images.length)
-    } else {
-      setCurrentIndex(prev => (prev - 1 + videos.length) % videos.length)
-    }
-  }, [currentType, images.length, videos.length])
-
-  // Handle keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (!lightboxOpen) return
-      
-      if (e.key === 'Escape') closeLightbox()
-      if (e.key === 'ArrowRight') nextItem()
-      if (e.key === 'ArrowLeft') prevItem()
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [lightboxOpen, closeLightbox, nextItem, prevItem])
+    setCurrentIndex((prev) => (prev - 1 + allItems.length) % allItems.length)
+  }, [allItems])
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Photos Section */}
-        <motion.div 
-          className="bg-white rounded-xl shadow-lg p-4 md:p-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Photos</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {images.map((img, idx) => (
-              <motion.div
-                key={img.id}
-                className="overflow-hidden rounded-lg cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
-                whileHover={{ scale: 1.03 }}
-                onClick={() => openLightbox(idx, 'image')}
-              >
-                <img
-                  src={`${base}/api/files/${img.id}`}
-                  alt="gallery item"
-                  className="w-full h-48 md:h-56 object-cover"
-                />
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Videos Section */}
-        <motion.div 
-          className="bg-white rounded-xl shadow-lg p-4 md:p-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Videos</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {videos.map((vid, idx) => (
-              <motion.div
-                key={vid.id}
-                className="overflow-hidden rounded-lg cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
-                whileHover={{ scale: 1.03 }}
-                onClick={() => openLightbox(idx, 'video')}
-              >
-                <div className="relative">
-                  <video
-                    src={`${base}/api/files/${vid.id}`}
-                    className="w-full h-48 md:h-56 object-cover"
-                    muted
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-black bg-opacity-50 rounded-full p-3">
-                      <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Lightbox Modal */}
-        <AnimatePresence>
-          {lightboxOpen && (
+    <div className="space-y-6">
+      <motion.div
+        className="card"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <h2>Photos</h2>
+        <div className="gallery-grid">
+          {images.map((i, idx) => (
             <motion.div
-              className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              key={i.id}
+              className="photo"
+              whileHover={{ scale: 1.03 }}
+              onClick={() => openLightbox(idx)}
+            >
+              <img
+                src={`${base}/api/files/${i.id}`}
+                alt="gallery item"
+                className="cursor-pointer"
+              />
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+
+      <motion.div
+        className="card"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <h2>Videos</h2>
+        <div className="gallery-grid">
+          {videos.map((v, idx) => (
+            <motion.div
+              key={v.id}
+              className="photo"
+              whileHover={{ scale: 1.03 }}
+              onClick={() => openLightbox(images.length + idx)}
+            >
+              <video
+                src={`${base}/api/files/${v.id}`}
+                className="cursor-pointer"
+              />
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {lightboxOpen && (
+          <motion.div
+            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* Close Button */}
+            <button
+              className="absolute top-4 right-4 text-white text-3xl"
               onClick={closeLightbox}
             >
-              {/* Close Button - Visible on all devices */}
-              <motion.button
-                className="absolute top-4 right-4 text-white z-50 bg-red-500 rounded-full p-2 hover:bg-red-600 transition-colors"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  closeLightbox();
-                }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <X size={32} />
-              </motion.button>
+              <X size={32} />
+            </button>
 
-              {/* Navigation Buttons - Hidden on mobile */}
-              <motion.button
-                className="hidden md:flex absolute left-4 text-white p-3 bg-black bg-opacity-50 rounded-full z-50 hover:bg-opacity-70 transition-colors"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  prevItem();
-                }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <ChevronLeft size={36} />
-              </motion.button>
+            {/* Prev Button (Desktop only) */}
+            <button
+              className="hidden md:flex absolute left-4 text-white p-2 bg-black/50 rounded-full"
+              onClick={prevItem}
+            >
+              <ChevronLeft size={32} />
+            </button>
 
-              <motion.button
-                className="hidden md:flex absolute right-4 text-white p-3 bg-black bg-opacity-50 rounded-full z-50 hover:bg-opacity-70 transition-colors"
-                initial={{ x: 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  nextItem();
-                }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <ChevronRight size={36} />
-              </motion.button>
+            {/* Next Button (Desktop only) */}
+            <button
+              className="hidden md:flex absolute right-4 text-white p-2 bg-black/50 rounded-full"
+              onClick={nextItem}
+            >
+              <ChevronRight size={32} />
+            </button>
 
-              {/* Lightbox Content */}
-              <motion.div 
-                className="relative w-full max-w-5xl max-h-screen px-4 flex items-center justify-center"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                onClick={(e) => e.stopPropagation()}
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                onDragEnd={(e, info) => {
-                  if (info.offset.x > 100) prevItem()
-                  if (info.offset.x < -100) nextItem()
-                }}
-              >
-                {currentType === 'image' ? (
-                  <motion.img
-                    key={`image-${currentIndex}`}
-                    src={`${base}/api/files/${images[currentIndex]?.id}`}
-                    alt="lightbox"
-                    className="max-w-full max-h-screen object-contain rounded-lg shadow-2xl"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  />
-                ) : (
-                  <motion.div 
-                    key={`video-${currentIndex}`}
-                    className="w-full"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <video
-                      src={`${base}/api/files/${videos[currentIndex]?.id}`}
-                      controls
-                      autoPlay
-                      className="max-w-full max-h-screen object-contain rounded-lg shadow-2xl"
-                    />
-                  </motion.div>
-                )}
-              </motion.div>
-
-              {/* Mobile Navigation Hint */}
-              <motion.div 
-                className="md:hidden absolute bottom-8 left-0 right-0 flex justify-center text-white text-sm bg-black bg-opacity-50 py-2"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-              >
-                Swipe left/right to navigate
-              </motion.div>
-
-              {/* Current Indicator */}
-              <div className="absolute top-4 left-4 text-white bg-black bg-opacity-50 px-3 py-1 rounded-full text-sm">
-                {currentIndex + 1} / {currentType === 'image' ? images.length : videos.length}
-              </div>
+            {/* Lightbox Content with swipe */}
+            <motion.div
+              key={currentIndex}
+              className="max-w-4xl w-full px-4"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, { offset, velocity }) => {
+                const swipe = offset.x * velocity.x
+                if (swipe < -1000) {
+                  nextItem()
+                } else if (swipe > 1000) {
+                  prevItem()
+                }
+              }}
+            >
+              {allItems[currentIndex]?.type === 'image' ? (
+                <img
+                  src={`${base}/api/files/${allItems[currentIndex].id}`}
+                  alt="preview"
+                  className="w-full h-auto max-h-[80vh] object-contain mx-auto rounded-lg"
+                />
+              ) : (
+                <video
+                  src={`${base}/api/files/${allItems[currentIndex].id}`}
+                  controls
+                  className="w-full h-auto max-h-[80vh] object-contain mx-auto rounded-lg"
+                />
+              )}
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
