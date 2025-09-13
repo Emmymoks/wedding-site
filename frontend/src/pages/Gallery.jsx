@@ -31,10 +31,14 @@ export default function Gallery() {
     setCurrentIndex(index)
     setCurrentType(type)
     setLightboxOpen(true)
+    // Prevent background scrolling when lightbox is open
+    document.body.style.overflow = 'hidden'
   }, [])
 
   const closeLightbox = useCallback(() => {
     setLightboxOpen(false)
+    // Re-enable scrolling when lightbox is closed
+    document.body.style.overflow = 'auto'
   }, [])
 
   const nextItem = useCallback(() => {
@@ -53,23 +57,37 @@ export default function Gallery() {
     }
   }, [currentType, images.length, videos.length])
 
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!lightboxOpen) return
+      
+      if (e.key === 'Escape') closeLightbox()
+      if (e.key === 'ArrowRight') nextItem()
+      if (e.key === 'ArrowLeft') prevItem()
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [lightboxOpen, closeLightbox, nextItem, prevItem])
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4">
       {/* Photos Section */}
-      <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <h2>Photos</h2>
-        <div className="gallery-grid">
+      <motion.div className="card bg-white rounded-lg shadow-md p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <h2 className="text-2xl font-bold mb-4">Photos</h2>
+        <div className="gallery-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {images.map((img, idx) => (
             <motion.div
               key={img.id}
-              className="photo"
+              className="photo overflow-hidden rounded-lg cursor-pointer"
               whileHover={{ scale: 1.03 }}
               onClick={() => openLightbox(idx, 'image')}
             >
               <img
                 src={`${base}/api/files/${img.id}`}
                 alt="gallery item"
-                className="cursor-pointer w-full h-full object-cover"
+                className="w-full h-48 object-cover"
               />
             </motion.div>
           ))}
@@ -77,19 +95,19 @@ export default function Gallery() {
       </motion.div>
 
       {/* Videos Section */}
-      <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <h2>Videos</h2>
-        <div className="gallery-grid">
+      <motion.div className="card bg-white rounded-lg shadow-md p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <h2 className="text-2xl font-bold mb-4">Videos</h2>
+        <div className="gallery-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {videos.map((vid, idx) => (
             <motion.div
               key={vid.id}
-              className="video"
+              className="video overflow-hidden rounded-lg cursor-pointer"
               whileHover={{ scale: 1.03 }}
               onClick={() => openLightbox(idx, 'video')}
             >
               <video
                 src={`${base}/api/files/${vid.id}`}
-                className="cursor-pointer w-full h-full object-cover"
+                className="w-full h-48 object-cover"
                 muted
               />
             </motion.div>
@@ -101,34 +119,46 @@ export default function Gallery() {
       <AnimatePresence>
         {lightboxOpen && (
           <motion.div
-            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={closeLightbox}
           >
             <button
-              className="absolute top-4 right-4 text-white z-50"
+              className="absolute top-4 right-4 text-white z-50 bg-gray-800 rounded-full p-2 hover:bg-gray-700 transition-colors"
               onClick={closeLightbox}
             >
               <X size={32} />
             </button>
 
             <button
-              className="hidden md:flex absolute left-4 text-white p-2 bg-black/50 rounded-full z-50"
-              onClick={prevItem}
+              className="hidden md:flex absolute left-4 text-white p-2 bg-black bg-opacity-50 rounded-full z-50 hover:bg-opacity-70 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                prevItem();
+              }}
             >
               <ChevronLeft size={32} />
             </button>
 
             <button
-              className="hidden md:flex absolute right-4 text-white p-2 bg-black/50 rounded-full z-50"
-              onClick={nextItem}
+              className="hidden md:flex absolute right-4 text-white p-2 bg-black bg-opacity-50 rounded-full z-50 hover:bg-opacity-70 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                nextItem();
+              }}
             >
               <ChevronRight size={32} />
             </button>
 
-            <motion.div
-              className="max-w-4xl w-full px-4"
+            <motion.div 
+              className="relative max-w-4xl w-full max-h-screen px-4 flex items-center justify-center"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              transition={{ type: "spring", damping: 20 }}
+              onClick={(e) => e.stopPropagation()}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               onDragEnd={(e, info) => {
@@ -140,17 +170,22 @@ export default function Gallery() {
                 <img
                   src={`${base}/api/files/${images[currentIndex]?.id}`}
                   alt="lightbox"
-                  className="w-full h-auto max-h-[80vh] object-contain mx-auto"
+                  className="max-w-full max-h-screen object-contain rounded-lg"
                 />
               ) : (
                 <video
                   src={`${base}/api/files/${videos[currentIndex]?.id}`}
                   controls
                   autoPlay
-                  className="w-full h-auto max-h-[80vh] object-contain mx-auto"
+                  className="max-w-full max-h-screen object-contain rounded-lg"
                 />
               )}
             </motion.div>
+
+            {/* Mobile navigation hints */}
+            <div className="md:hidden absolute bottom-4 left-0 right-0 flex justify-center text-white text-sm">
+              Swipe to navigate
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
