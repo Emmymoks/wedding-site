@@ -94,7 +94,7 @@ export default function Home() {
               A small preview — click to open the full gallery.
             </p>
           </div>
-          <div className="small">Showing {previewItems.length} items</div>
+          
         </div>
 
         <div
