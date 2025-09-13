@@ -8,7 +8,7 @@ export default function Gallery() {
   const [videos, setVideos] = useState([])
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [allItems, setAllItems] = useState([])
+  const [currentType, setCurrentType] = useState('image')
 
   const base = import.meta.env.VITE_BACKEND_URL
 
@@ -22,20 +22,14 @@ export default function Gallery() {
       const vidRes = await axios.get(`${base}/api/gallery?type=video`)
       setImages(imgRes.data)
       setVideos(vidRes.data)
-
-      // Merge into single array for lightbox navigation
-      const combined = [
-        ...imgRes.data.map(i => ({ ...i, type: 'image' })),
-        ...vidRes.data.map(v => ({ ...v, type: 'video' }))
-      ]
-      setAllItems(combined)
     } catch (e) {
       console.error(e)
     }
   }
 
-  const openLightbox = useCallback(index => {
+  const openLightbox = useCallback((index, type) => {
     setCurrentIndex(index)
+    setCurrentType(type)
     setLightboxOpen(true)
   }, [])
 
@@ -44,56 +38,59 @@ export default function Gallery() {
   }, [])
 
   const nextItem = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % allItems.length)
-  }, [allItems])
+    if (currentType === 'image') {
+      setCurrentIndex(prev => (prev + 1) % images.length)
+    } else {
+      setCurrentIndex(prev => (prev + 1) % videos.length)
+    }
+  }, [currentType, images.length, videos.length])
 
   const prevItem = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + allItems.length) % allItems.length)
-  }, [allItems])
+    if (currentType === 'image') {
+      setCurrentIndex(prev => (prev - 1 + images.length) % images.length)
+    } else {
+      setCurrentIndex(prev => (prev - 1 + videos.length) % videos.length)
+    }
+  }, [currentType, images.length, videos.length])
 
   return (
     <div className="space-y-6">
-      <motion.div
-        className="card"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
+      {/* Photos Section */}
+      <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <h2>Photos</h2>
         <div className="gallery-grid">
-          {images.map((i, idx) => (
+          {images.map((img, idx) => (
             <motion.div
-              key={i.id}
+              key={img.id}
               className="photo"
               whileHover={{ scale: 1.03 }}
-              onClick={() => openLightbox(idx)}
+              onClick={() => openLightbox(idx, 'image')}
             >
               <img
-                src={`${base}/api/files/${i.id}`}
+                src={`${base}/api/files/${img.id}`}
                 alt="gallery item"
-                className="cursor-pointer"
+                className="cursor-pointer w-full h-full object-cover"
               />
             </motion.div>
           ))}
         </div>
       </motion.div>
 
-      <motion.div
-        className="card"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
+      {/* Videos Section */}
+      <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <h2>Videos</h2>
         <div className="gallery-grid">
-          {videos.map((v, idx) => (
+          {videos.map((vid, idx) => (
             <motion.div
-              key={v.id}
-              className="photo"
+              key={vid.id}
+              className="video"
               whileHover={{ scale: 1.03 }}
-              onClick={() => openLightbox(images.length + idx)}
+              onClick={() => openLightbox(idx, 'video')}
             >
               <video
-                src={`${base}/api/files/${v.id}`}
-                className="cursor-pointer"
+                src={`${base}/api/files/${vid.id}`}
+                className="cursor-pointer w-full h-full object-cover"
+                muted
               />
             </motion.div>
           ))}
@@ -109,61 +106,48 @@ export default function Gallery() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Close Button */}
             <button
-              className="absolute top-4 right-4 text-white text-3xl"
+              className="absolute top-4 right-4 text-white z-50"
               onClick={closeLightbox}
             >
               <X size={32} />
             </button>
 
-            {/* Prev Button (Desktop only) */}
             <button
-              className="hidden md:flex absolute left-4 text-white p-2 bg-black/50 rounded-full"
+              className="hidden md:flex absolute left-4 text-white p-2 bg-black/50 rounded-full z-50"
               onClick={prevItem}
             >
               <ChevronLeft size={32} />
             </button>
 
-            {/* Next Button (Desktop only) */}
             <button
-              className="hidden md:flex absolute right-4 text-white p-2 bg-black/50 rounded-full"
+              className="hidden md:flex absolute right-4 text-white p-2 bg-black/50 rounded-full z-50"
               onClick={nextItem}
             >
               <ChevronRight size={32} />
             </button>
 
-            {/* Lightbox Content with swipe */}
             <motion.div
-              key={currentIndex}
               className="max-w-4xl w-full px-4"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(e, { offset, velocity }) => {
-                const swipe = offset.x * velocity.x
-                if (swipe < -1000) {
-                  nextItem()
-                } else if (swipe > 1000) {
-                  prevItem()
-                }
+              onDragEnd={(e, info) => {
+                if (info.offset.x > 100) prevItem()
+                if (info.offset.x < -100) nextItem()
               }}
             >
-              {allItems[currentIndex]?.type === 'image' ? (
+              {currentType === 'image' ? (
                 <img
-                  src={`${base}/api/files/${allItems[currentIndex].id}`}
-                  alt="preview"
-                  className="w-full h-auto max-h-[80vh] object-contain mx-auto rounded-lg"
+                  src={`${base}/api/files/${images[currentIndex]?.id}`}
+                  alt="lightbox"
+                  className="w-full h-auto max-h-[80vh] object-contain mx-auto"
                 />
               ) : (
                 <video
-                  src={`${base}/api/files/${allItems[currentIndex].id}`}
+                  src={`${base}/api/files/${videos[currentIndex]?.id}`}
                   controls
-                  className="w-full h-auto max-h-[80vh] object-contain mx-auto rounded-lg"
+                  autoPlay
+                  className="w-full h-auto max-h-[80vh] object-contain mx-auto"
                 />
               )}
             </motion.div>
