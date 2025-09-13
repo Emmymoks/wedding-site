@@ -6,9 +6,9 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 export default function Gallery() {
   const [images, setImages] = useState([])
   const [videos, setVideos] = useState([])
-  const [allItems, setAllItems] = useState([])
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [allItems, setAllItems] = useState([])
 
   const base = import.meta.env.VITE_BACKEND_URL
 
@@ -23,7 +23,7 @@ export default function Gallery() {
       setImages(imgRes.data)
       setVideos(vidRes.data)
 
-      // Combine both for lightbox navigation
+      // Merge into single array for lightbox navigation
       const combined = [
         ...imgRes.data.map(i => ({ ...i, type: 'image' })),
         ...vidRes.data.map(v => ({ ...v, type: 'video' }))
@@ -44,17 +44,20 @@ export default function Gallery() {
   }, [])
 
   const nextItem = useCallback(() => {
-    setCurrentIndex(prev => (prev + 1) % allItems.length)
+    setCurrentIndex((prev) => (prev + 1) % allItems.length)
   }, [allItems])
 
   const prevItem = useCallback(() => {
-    setCurrentIndex(prev => (prev - 1 + allItems.length) % allItems.length)
+    setCurrentIndex((prev) => (prev - 1 + allItems.length) % allItems.length)
   }, [allItems])
 
   return (
     <div className="space-y-6">
-      {/* Photos */}
-      <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <motion.div
+        className="card"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
         <h2>Photos</h2>
         <div className="gallery-grid">
           {images.map((i, idx) => (
@@ -74,8 +77,11 @@ export default function Gallery() {
         </div>
       </motion.div>
 
-      {/* Videos */}
-      <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <motion.div
+        className="card"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
         <h2>Videos</h2>
         <div className="gallery-grid">
           {videos.map((v, idx) => (
@@ -96,14 +102,14 @@ export default function Gallery() {
 
       {/* Lightbox Modal */}
       <AnimatePresence>
-        {lightboxOpen && allItems.length > 0 && (
+        {lightboxOpen && (
           <motion.div
             className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Close */}
+            {/* Close Button */}
             <button
               className="absolute top-4 right-4 text-white text-3xl"
               onClick={closeLightbox}
@@ -111,7 +117,7 @@ export default function Gallery() {
               <X size={32} />
             </button>
 
-            {/* Prev (desktop) */}
+            {/* Prev Button (Desktop only) */}
             <button
               className="hidden md:flex absolute left-4 text-white p-2 bg-black/50 rounded-full"
               onClick={prevItem}
@@ -119,7 +125,7 @@ export default function Gallery() {
               <ChevronLeft size={32} />
             </button>
 
-            {/* Next (desktop) */}
+            {/* Next Button (Desktop only) */}
             <button
               className="hidden md:flex absolute right-4 text-white p-2 bg-black/50 rounded-full"
               onClick={nextItem}
@@ -127,7 +133,7 @@ export default function Gallery() {
               <ChevronRight size={32} />
             </button>
 
-            {/* Content with swipe */}
+            {/* Lightbox Content with swipe */}
             <motion.div
               key={currentIndex}
               className="max-w-4xl w-full px-4"
