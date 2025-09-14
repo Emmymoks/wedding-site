@@ -34,22 +34,16 @@ export default function AdminDashboard() {
         headers: { Authorization: 'Bearer ' + token }
       })
 
-      // For each file, fetch blob for preview
-      const withPreviews = await Promise.all(
-        f.data.map(async file => {
-          try {
-            const res = await axios.get(`${base}/api/files/${file._id}`, {
-              headers: { Authorization: 'Bearer ' + token },
-              responseType: 'blob'
-            })
-            const url = URL.createObjectURL(res.data)
-            return { ...file, previewUrl: url }
-          } catch (err) {
-            console.error('Preview fetch failed:', file._id, err)
-            return { ...file, previewUrl: null }
-          }
-        })
-      )
+      // Instead of downloading full files, just attach thumbnail URLs
+      const withPreviews = f.data.map(file => {
+        const type = file.mimetype || file.contentType || ''
+        return {
+          ...file,
+          previewUrl: type.startsWith('video')
+            ? `${base}/api/files/${file._id}` // keep full video for now
+            : `${base}/api/thumbnails/${file._id}` // small preview for images
+        }
+      })
 
       setFiles(withPreviews)
     } catch (e) {
@@ -270,40 +264,25 @@ export default function AdminDashboard() {
                   flexDirection: 'column'
                 }}
               >
-                {f.previewUrl ? (
-                  type.startsWith('video') ? (
-                    <video
-                      controls
-                      style={{ width: '100%', height: 180, objectFit: 'cover' }}
-                    >
-                      <source src={f.previewUrl} type={f.contentType} />
-                    </video>
-                  ) : (
-                    <img
-                      src={f.previewUrl}
-                      alt={f.filename}
-                      style={{
-                        width: '100%',
-                        height: 180,
-                        objectFit: 'cover',
-                        display: 'block'
-                      }}
-                    />
-                  )
+                {type.startsWith('video') ? (
+                  <video
+                    controls
+                    style={{ width: '100%', height: 180, objectFit: 'cover' }}
+                  >
+                    <source src={f.previewUrl} type={f.contentType} />
+                  </video>
                 ) : (
-                  <div
+                  <img
+                    src={f.previewUrl}
+                    alt={f.filename}
                     style={{
                       width: '100%',
                       height: 180,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: '#f9f9f9',
-                      color: '#888'
+                      objectFit: 'cover',
+                      display: 'block'
                     }}
-                  >
-                    Preview not available
-                  </div>
+                    loading="lazy"
+                  />
                 )}
                 <div className="photo-meta" style={{ padding: 14 }}>
                   <span style={{ display: 'block', marginBottom: 10 }}>
