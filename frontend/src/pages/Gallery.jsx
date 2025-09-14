@@ -22,7 +22,6 @@ export default function Gallery() {
       setImages(imgRes.data)
       setVideos(vidRes.data)
 
-      // keep items in order: images first, then videos
       const combined = [
         ...imgRes.data.map(i => ({ ...i, type: 'image' })),
         ...vidRes.data.map(v => ({ ...v, type: 'video' }))
@@ -50,6 +49,33 @@ export default function Gallery() {
     setCurrentIndex(prev => (prev - 1 + allItems.length) % allItems.length)
   }, [allItems])
 
+  // 🔑 Keyboard navigation
+  useEffect(() => {
+    if (!lightboxOpen) return
+    const handleKey = e => {
+      if (e.key === 'ArrowRight') nextItem()
+      if (e.key === 'ArrowLeft') prevItem()
+      if (e.key === 'Escape') closeLightbox()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [lightboxOpen, nextItem, prevItem, closeLightbox])
+
+  // 🔑 Preload next/previous for faster load
+  useEffect(() => {
+    if (!lightboxOpen || allItems.length === 0) return
+    const preload = index => {
+      const item = allItems[index]
+      if (!item) return
+      if (item.type === 'image') {
+        const img = new Image()
+        img.src = `${base}/api/files/${item.id}`
+      }
+    }
+    preload((currentIndex + 1) % allItems.length)
+    preload((currentIndex - 1 + allItems.length) % allItems.length)
+  }, [lightboxOpen, currentIndex, allItems, base])
+
   return (
     <div className="space-y-6">
       {/* Images */}
@@ -68,6 +94,7 @@ export default function Gallery() {
                 alt={i.originalname || 'gallery photo'}
                 className="cursor-pointer"
                 loading="lazy"
+                decoding="async"
               />
             </motion.div>
           ))}
@@ -90,6 +117,7 @@ export default function Gallery() {
                 alt={v.originalname || 'gallery video'}
                 className="cursor-pointer"
                 loading="lazy"
+                decoding="async"
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-3xl font-bold">
                 ▶
@@ -108,7 +136,6 @@ export default function Gallery() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Close Button */}
             <button className="lightbox-close" onClick={closeLightbox}>
               ×
             </button>
@@ -119,16 +146,13 @@ export default function Gallery() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
+              dragElastic={0.15}
               onDragEnd={(e, { offset }) => {
-                if (offset.x < -100) {
-                  nextItem()
-                } else if (offset.x > 100) {
-                  prevItem()
-                }
+                if (offset.x < -100) nextItem()
+                else if (offset.x > 100) prevItem()
               }}
             >
               {allItems[currentIndex]?.type === 'image' ? (
@@ -136,13 +160,20 @@ export default function Gallery() {
                   src={`${base}/api/files/${allItems[currentIndex].id}`}
                   alt="preview"
                   className="lightbox-media"
+                  loading="eager"
+                  decoding="sync"
                 />
               ) : (
                 <video
                   src={`${base}/api/files/${allItems[currentIndex].id}`}
                   controls
+                  playsInline
                   autoPlay
+                  muted
+                  preload="metadata"
+                  controlsList="nodownload"
                   className="lightbox-media"
+                  style={{ maxHeight: '90vh', maxWidth: '100%' }}
                 />
               )}
             </motion.div>
