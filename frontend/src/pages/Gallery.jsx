@@ -8,6 +8,7 @@ export default function Gallery() {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [allItems, setAllItems] = useState([])
+  const [loading, setLoading] = useState(false)
 
   const base = import.meta.env.VITE_BACKEND_URL
 
@@ -35,6 +36,7 @@ export default function Gallery() {
   const openLightbox = useCallback(index => {
     setCurrentIndex(index)
     setLightboxOpen(true)
+    setLoading(true)
   }, [])
 
   const closeLightbox = useCallback(() => {
@@ -42,11 +44,19 @@ export default function Gallery() {
   }, [])
 
   const nextItem = useCallback(() => {
-    setCurrentIndex(prev => (prev + 1) % allItems.length)
+    setCurrentIndex(prev => {
+      const next = (prev + 1) % allItems.length
+      setLoading(true)
+      return next
+    })
   }, [allItems])
 
   const prevItem = useCallback(() => {
-    setCurrentIndex(prev => (prev - 1 + allItems.length) % allItems.length)
+    setCurrentIndex(prev => {
+      const prevIdx = (prev - 1 + allItems.length) % allItems.length
+      setLoading(true)
+      return prevIdx
+    })
   }, [allItems])
 
   // 🔑 Keyboard navigation
@@ -61,7 +71,7 @@ export default function Gallery() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [lightboxOpen, nextItem, prevItem, closeLightbox])
 
-  // 🔑 Preload next/previous for faster load
+  // 🔑 Preload next/previous images for smoother UX
   useEffect(() => {
     if (!lightboxOpen || allItems.length === 0) return
     const preload = index => {
@@ -142,7 +152,7 @@ export default function Gallery() {
 
             <motion.div
               key={currentIndex}
-              className="lightbox-content"
+              className="lightbox-content relative"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
@@ -155,6 +165,13 @@ export default function Gallery() {
                 else if (offset.x > 100) prevItem()
               }}
             >
+              {/* Spinner */}
+              {loading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
+                  <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
+
               {allItems[currentIndex]?.type === 'image' ? (
                 <img
                   src={`${base}/api/files/${allItems[currentIndex].id}`}
@@ -162,18 +179,19 @@ export default function Gallery() {
                   className="lightbox-media"
                   loading="eager"
                   decoding="sync"
+                  onLoad={() => setLoading(false)}
                 />
               ) : (
                 <video
                   src={`${base}/api/files/${allItems[currentIndex].id}`}
                   controls
-                  playsInline
                   autoPlay
+                  playsInline
                   muted
-                  preload="metadata"
-                  controlsList="nodownload"
+                  preload="auto"
                   className="lightbox-media"
                   style={{ maxHeight: '90vh', maxWidth: '100%' }}
+                  onLoadedData={() => setLoading(false)}
                 />
               )}
             </motion.div>
