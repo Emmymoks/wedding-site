@@ -10,6 +10,8 @@ const { GridFsStorage } = require('multer-gridfs-storage');
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const sharp = require('sharp'); // for thumbnails
+const stream = require('stream');
 
 const app = express();
 app.use(express.json());
@@ -141,6 +143,71 @@ const storage = new GridFsStorage({
 });
 const upload = multer({ storage });
 
+/* ---------- Helper: read GridFS file into buffer ---------- */
+function streamToBuffer(readStream) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    readStream.on('data', (c) => chunks.push(c));
+    readStream.on('end', () => resolve(Buffer.concat(chunks)));
+    readStream.on('error', (err) => reject(err));
+  });
+}
+
+/* ---------- Helper: find thumbnail for original file id ---------- */
+async function findThumbnailByOriginalId(originalId) {
+  const files = await mongoose.connection.db
+    .collection('uploads.files')
+    .find({ 'metadata.originalId': new mongoose.Types.ObjectId(originalId), 'metadata.isThumbnail': true })
+    .toArray();
+  return files && files.length ? files[0] : null;
+}
+
+/* ---------- Helper: create and store thumbnail for an image file ---------- */
+async function generateAndStoreThumbnail(originalFile) {
+  try {
+    // open read stream from GridFS for original
+    const _id = new mongoose.Types.ObjectId(originalFile._id);
+    const readStream = bucket.openDownloadStream(_id);
+    const buf = await streamToBuffer(readStream);
+
+    // generate thumbnail via sharp (resize width 300, keep aspect)
+    const thumbBuf = await sharp(buf).resize({ width: 300, withoutEnlargement: true }).jpeg({ quality: 75 }).toBuffer();
+
+    // write thumbnail back to GridFS
+    const uploadStream = bucket.openUploadStream(originalFile.filename + '_thumb.jpg', {
+      metadata: {
+        originalId: new mongoose.Types.ObjectId(originalFile._id),
+        isThumbnail: true,
+        uploader: originalFile.metadata && originalFile.metadata.uploader ? originalFile.metadata.uploader : 'system'
+      },
+      contentType: 'image/jpeg'
+    });
+
+    const bufferStream = new stream.PassThrough();
+    bufferStream.end(thumbBuf);
+    bufferStream.pipe(uploadStream);
+
+    return new Promise((resolve, reject) => {
+      uploadStream.on('finish', async (file) => {
+        // return the stored file doc from uploads.files
+        try {
+          const stored = await mongoose.connection.db.collection('uploads.files').findOne({ _id: file._id });
+          resolve(stored);
+        } catch (e) {
+          resolve(null);
+        }
+      });
+      uploadStream.on('error', (err) => {
+        console.error('Thumbnail upload error:', err);
+        reject(err);
+      });
+    });
+  } catch (err) {
+    console.error('generateAndStoreThumbnail error:', err);
+    return null;
+  }
+}
+
 /* ---------- Routes ---------- */
 
 // Auth
@@ -210,13 +277,37 @@ app.put('/api/guests/:id', authMiddleware, async (req, res) => {
 });
 
 // Upload
-app.post('/api/uploads', upload.array('files', 12), (req, res) => {
+app.post('/api/uploads', upload.array('files', 12), async (req, res) => {
   try {
     const out = (req.files || []).map(f => ({
       id: f.id || f._id || null,
       filename: f.filename,
-      originalname: (f.metadata && f.metadata.originalname) || f.originalname || ''
+      originalname: (f.metadata && f.metadata.originalname) || f.originalname || '',
+      contentType: f.contentType
     }));
+
+    // Generate thumbnails for image files asynchronously (don't block response too long)
+    (async () => {
+      try {
+        for (const f of req.files || []) {
+          if (f.contentType && f.contentType.match(/^image\//)) {
+            // fetch the file doc (in case)
+            const stored = await mongoose.connection.db.collection('uploads.files').findOne({ _id: f.id || f._id });
+            if (stored) {
+              // don't create thumbnail if one already exists
+              const existingThumb = await findThumbnailByOriginalId(stored._id);
+              if (!existingThumb) {
+                await generateAndStoreThumbnail(stored);
+                console.log('Generated thumbnail for', stored._id.toString());
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Thumbnail background generation error:', err);
+      }
+    })();
+
     res.json({ files: out });
   } catch (err) {
     console.error('Upload error:', err);
@@ -252,6 +343,13 @@ app.delete('/api/uploads/:id', authMiddleware, async (req, res) => {
   const id = req.params.id;
   try {
     await bucket.delete(new mongoose.Types.ObjectId(id));
+    // Optionally delete thumbnail(s) referencing this original
+    const thumbs = await mongoose.connection.db.collection('uploads.files').find({ 'metadata.originalId': new mongoose.Types.ObjectId(id) }).toArray();
+    for (const t of thumbs) {
+      try {
+        await bucket.delete(t._id);
+      } catch (e) { /* ignore */ }
+    }
     res.json({ ok: true });
   } catch (e) {
     console.error('Delete file error:', e);
@@ -259,7 +357,12 @@ app.delete('/api/uploads/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// Stream/download file (supports ?token= for admins)
+/* Stream/download file
+   Supports:
+    - public access for approved files
+    - admin preview via Authorization header OR ?token query param
+    - thumbnail serving via ?thumb=1
+*/
 app.get('/api/files/:id', async (req, res) => {
   try {
     const _id = new mongoose.Types.ObjectId(req.params.id);
@@ -268,6 +371,33 @@ app.get('/api/files/:id', async (req, res) => {
     if (!files || files.length === 0) return res.status(404).json({ error: 'File not found' });
     const file = files[0];
 
+    // if thumbnail requested
+    const wantsThumb = req.query.thumb && (req.query.thumb === '1' || req.query.thumb === 'true');
+
+    // Thumbnail flow
+    if (wantsThumb && file.contentType && file.contentType.match(/^image\//)) {
+      // check if thumbnail exists
+      const thumb = await findThumbnailByOriginalId(file._id);
+      if (thumb) {
+        // stream the thumbnail
+        res.set('Content-Type', thumb.contentType || 'image/jpeg');
+        res.set('Cache-Control', 'public, max-age=604800'); // 7 days
+        const thumbStream = bucket.openDownloadStream(thumb._id);
+        return thumbStream.pipe(res);
+      } else {
+        // generate, store and serve
+        const generated = await generateAndStoreThumbnail(file);
+        if (generated) {
+          res.set('Content-Type', generated.contentType || 'image/jpeg');
+          res.set('Cache-Control', 'public, max-age=604800');
+          const s = bucket.openDownloadStream(generated._id);
+          return s.pipe(res);
+        }
+        // fallback to original stream if generation fails
+      }
+    }
+
+    // Normal access authorization logic
     let allow = false;
     if (file.metadata && file.metadata.approved) allow = true;
 
@@ -292,6 +422,7 @@ app.get('/api/files/:id', async (req, res) => {
 
     if (!allow) return res.status(403).json({ error: 'Not approved yet' });
 
+    // Stream the original file
     res.set('Content-Type', file.contentType || 'application/octet-stream');
     const forceDownload = req.query.download && req.query.download !== '0';
     if (forceDownload) {
