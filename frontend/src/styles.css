@@ -67,13 +67,21 @@ body {
   color: #444;
   text-decoration: none;
   font-weight: 600;
-  padding: 8px 12px;
+  padding: 8px 14px;
   border-radius: 10px;
-  transition: all 0.22s ease;
+  transition: all 0.25s ease;
 }
 .nav a:hover {
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+  color: white;
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(127, 86, 218, 0.08);
+  box-shadow: 0 6px 18px rgba(127, 86, 218, 0.18);
+}
+.nav a:active {
+  background: linear-gradient(90deg, var(--accent-2), var(--accent-3));
+  color: white;
+  transform: scale(0.96);
+  box-shadow: 0 4px 12px rgba(255, 122, 182, 0.25);
 }
 .nav a.active {
   background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
