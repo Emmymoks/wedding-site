@@ -23,10 +23,10 @@ export default function Home() {
 
   // static fallback images if API returns nothing
   const fallback = [
-    'https://ik.imagekit.io/emmymoks/hands.jpg?updatedAt=1757704492634',
-    'https://ik.imagekit.io/emmymoks/bride-groom-shot.jpg?updatedAt=1757704492259',
-    'https://ik.imagekit.io/emmymoks/close-up-kissing.jpg?updatedAt=1757704492198',
-    'https://ik.imagekit.io/emmymoks/couple.jpg?updatedAt=1757704492103'
+    'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0018.jpg?updatedAt=1757861458458',
+    'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0021.jpg?updatedAt=1757861458183',
+    'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0024.jpg?updatedAt=1757861456103',
+    'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0022.jpg?updatedAt=1757861455264'
   ]
 
   // use backend file links if available, otherwise fallback
@@ -78,7 +78,7 @@ export default function Home() {
         >
           <div style={{ width: '100%', borderRadius: 16, overflow: 'hidden', boxShadow: 'var(--shadow-2)' }}>
             <img
-              src="https://ik.imagekit.io/emmymoks/wedding-shot.jpg?updatedAt=1757704492278"
+              src="https://ik.imagekit.io/emmymoks/IMG-20250914-WA0019.jpg?updatedAt=1757861448258"
               alt="hero"
               style={{ width: '100%', height: 340, objectFit: 'cover' }}
             />
