@@ -11,6 +11,7 @@ export default function AdminDashboard() {
   const [first, setFirst] = useState('')
   const [last, setLast] = useState('')
   const [scanResult, setScanResult] = useState('')
+  const [showPendingOnly, setShowPendingOnly] = useState(false) // 🔥 filter toggle state
   const token = localStorage.getItem('token')
   const scannerRef = useRef(null)
   const base = import.meta.env.VITE_BACKEND_URL
@@ -126,6 +127,11 @@ export default function AdminDashboard() {
     else alert('❌ Invalid Guest QR')
   }
 
+  // 🔥 filter logic
+  const displayedFiles = showPendingOnly
+    ? files.filter(f => !f.metadata?.approved)
+    : files
+
   return (
     <div
       className="space-y-6"
@@ -233,9 +239,21 @@ export default function AdminDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h3 style={{ marginBottom: 16 }}>Uploads (Approve / Delete)</h3>
+        <div
+          className="row space-between"
+          style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}
+        >
+          <h3>Uploads (Approve / Delete)</h3>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setShowPendingOnly(prev => !prev)}
+          >
+            {showPendingOnly ? 'Show All' : 'Show Only Pending'}
+          </button>
+        </div>
+
         <div className="gallery-grid">
-          {files.map(f => {
+          {displayedFiles.map(f => {
             const type = f.mimetype || f.contentType || ''
             const approved = f.metadata?.approved
             return (
