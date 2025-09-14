@@ -51,6 +51,7 @@ export default function Gallery() {
 
   return (
     <div className="space-y-6">
+      {/* Images */}
       <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <h2>Photos</h2>
         <div className="gallery-grid">
@@ -62,8 +63,8 @@ export default function Gallery() {
               onClick={() => openLightbox(idx)}
             >
               <img
-                src={`${base}/api/files/${i.id}?thumb=1`}  // thumbnail version
-                alt="gallery item"
+                src={`${base}/api/files/${i.id}?thumb=1`} // thumbnail
+                alt={i.originalname || 'gallery photo'}
                 className="cursor-pointer"
                 loading="lazy"
               />
@@ -72,21 +73,27 @@ export default function Gallery() {
         </div>
       </motion.div>
 
+      {/* Videos */}
       <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <h2>Videos</h2>
         <div className="gallery-grid">
           {videos.map((v, idx) => (
             <motion.div
               key={v.id}
-              className="photo"
+              className="photo relative"
               whileHover={{ scale: 1.03 }}
               onClick={() => openLightbox(images.length + idx)}
             >
-              <video
-                src={`${base}/api/files/${v.id}?thumb=1`} // low-res/thumbnail poster
+              <img
+                src={`${base}/api/files/${v.id}?thumb=1`} // video thumbnail (snapshot)
+                alt={v.originalname || 'gallery video'}
                 className="cursor-pointer"
-                preload="none"
+                loading="lazy"
               />
+              {/* play overlay */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-3xl font-bold">
+                ▶
+              </div>
             </motion.div>
           ))}
         </div>
@@ -127,13 +134,13 @@ export default function Gallery() {
             >
               {allItems[currentIndex]?.type === 'image' ? (
                 <img
-                  src={`${base}/api/files/${allItems[currentIndex].id}`} // full-res only here
+                  src={`${base}/api/files/${allItems[currentIndex].id}`} // full-res image
                   alt="preview"
                   className="lightbox-media"
                 />
               ) : (
                 <video
-                  src={`${base}/api/files/${allItems[currentIndex].id}`} // full-res video here
+                  src={`${base}/api/files/${allItems[currentIndex].id}`} // full video
                   controls
                   autoPlay
                   className="lightbox-media"
