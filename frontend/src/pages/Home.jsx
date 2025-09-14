@@ -21,16 +21,18 @@ export default function Home() {
     })()
   }, [base])
 
-  // static fallback images if API returns nothing
+  // static fallback thumbnails if API returns nothing
   const fallback = [
-    'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0018.jpg?updatedAt=1757861458458',
-    'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0021.jpg?updatedAt=1757861458183',
-    'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0024.jpg?updatedAt=1757861456103',
-    'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0022.jpg?updatedAt=1757861455264'
+    'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0018.jpg?tr=w-300,h-200,fo-auto',
+    'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0021.jpg?tr=w-300,h-200,fo-auto',
+    'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0024.jpg?tr=w-300,h-200,fo-auto',
+    'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0022.jpg?tr=w-300,h-200,fo-auto'
   ]
 
-  // use backend file links if available, otherwise fallback
-  const previewItems = latest.length ? latest.map(i => `${base}/api/files/${i.id}`) : fallback
+  // use backend thumbnails if available, otherwise fallback
+  const previewItems = latest.length
+    ? latest.map(i => `${base}/api/thumbnails/${i.id}`)
+    : fallback
 
   return (
     <div className="space-y-6">
@@ -76,11 +78,19 @@ export default function Home() {
           animate={{ scale: 1 }}
           transition={{ delay: 0.25 }}
         >
-          <div style={{ width: '100%', borderRadius: 16, overflow: 'hidden', boxShadow: 'var(--shadow-2)' }}>
+          <div
+            style={{
+              width: '100%',
+              borderRadius: 16,
+              overflow: 'hidden',
+              boxShadow: 'var(--shadow-2)'
+            }}
+          >
             <img
-              src="https://ik.imagekit.io/emmymoks/IMG-20250914-WA0019.jpg?updatedAt=1757861448258"
+              src="https://ik.imagekit.io/emmymoks/IMG-20250914-WA0019.jpg?updatedAt=1757861448258&tr=w-800,h-500,fo-auto"
               alt="hero"
               style={{ width: '100%', height: 340, objectFit: 'cover' }}
+              loading="lazy"
             />
           </div>
         </motion.div>
@@ -94,7 +104,6 @@ export default function Home() {
               A small preview — click to open the full gallery.
             </p>
           </div>
-          
         </div>
 
         <div
@@ -109,7 +118,7 @@ export default function Home() {
             <motion.a
               key={idx}
               href="/gallery"
-              onClick={(e) => {
+              onClick={e => {
                 e.preventDefault()
                 nav('/gallery')
               }}
@@ -125,7 +134,13 @@ export default function Home() {
               <img
                 src={src}
                 alt={`preview-${idx}`}
-                style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }}
+                style={{
+                  width: '100%',
+                  height: 200,
+                  objectFit: 'cover',
+                  display: 'block'
+                }}
+                loading="lazy"
               />
             </motion.a>
           ))}
