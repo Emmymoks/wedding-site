@@ -399,6 +399,7 @@ main {
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+  cursor: default;
 }
 
 .lightbox-content {
@@ -407,6 +408,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: default;
 }
 
 .lightbox-media {
@@ -415,12 +417,22 @@ main {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-2);
   object-fit: contain;
-  cursor: zoom-in;
   transition: transform 0.3s ease;
+  cursor: default;
 }
-.lightbox-media:active {
-  transform: scale(1.4);
+
+/* Zoom only for images */
+.lightbox-media:not(.lightbox-video) {
+  cursor: zoom-in;
+}
+
+.lightbox-media-zoomed {
+  transform: scale(1.8);
   cursor: zoom-out;
+}
+
+.lightbox-video {
+  cursor: default;
 }
 
 .lightbox-close {
@@ -503,6 +515,10 @@ main {
   
   .lightbox-media {
     max-height: 85vh;
+  }
+  
+  .lightbox-media-zoomed {
+    transform: scale(1.4);
   }
 }
 
