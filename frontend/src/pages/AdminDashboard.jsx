@@ -34,14 +34,15 @@ export default function AdminDashboard() {
         headers: { Authorization: 'Bearer ' + token }
       })
 
-      // Attach lightweight previews (images: thumb, videos: snapshot thumb)
-      const withPreviews = f.data.map(file => {
+      // ✅ Filter out thumbnails (only originals)
+      const originals = f.data.filter(file => !file.metadata?.isThumbnail)
+
+      // Attach lightweight previews
+      const withPreviews = originals.map(file => {
         const type = file.mimetype || file.contentType || ''
         return {
           ...file,
-          previewUrl: type.startsWith('video')
-            ? `${base}/api/files/${file._id}?thumb=1` // 🔥 video snapshot thumbnail
-            : `${base}/api/files/${file._id}?thumb=1` // 🔥 image thumbnail
+          previewUrl: `${base}/api/files/${file._id}?thumb=1` // always use thumbnail for preview
         }
       })
 
@@ -248,7 +249,6 @@ export default function AdminDashboard() {
 
         <div className="gallery-grid">
           {displayedFiles.map(f => {
-            const type = f.mimetype || f.contentType || ''
             const approved = f.metadata?.approved
             return (
               <motion.div
@@ -264,31 +264,17 @@ export default function AdminDashboard() {
                   flexDirection: 'column'
                 }}
               >
-                {type.startsWith('video') ? (
-                  <img
-                    src={f.previewUrl}
-                    alt={f.filename}
-                    style={{
-                      width: '100%',
-                      height: 180,
-                      objectFit: 'cover',
-                      display: 'block'
-                    }}
-                    loading="lazy"
-                  />
-                ) : (
-                  <img
-                    src={f.previewUrl}
-                    alt={f.filename}
-                    style={{
-                      width: '100%',
-                      height: 180,
-                      objectFit: 'cover',
-                      display: 'block'
-                    }}
-                    loading="lazy"
-                  />
-                )}
+                <img
+                  src={f.previewUrl}
+                  alt={f.filename}
+                  style={{
+                    width: '100%',
+                    height: 180,
+                    objectFit: 'cover',
+                    display: 'block'
+                  }}
+                  loading="lazy"
+                />
                 <div className="photo-meta" style={{ padding: 14 }}>
                   <span style={{ display: 'block', marginBottom: 10 }}>
                     <strong>{f.metadata?.uploader || 'Anonymous'}</strong> —{' '}
