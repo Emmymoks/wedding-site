@@ -32,14 +32,16 @@ allowedOrigins.push(...extra);
 app.use(
   cors({
     origin(origin, cb) {
-      // Allow requests with no origin (like mobile apps or curl)
+      // ✅ Allow requests with no origin (curl, Postman, mobile apps)
       if (!origin) return cb(null, true);
 
-      if (allowedOrigins.includes(origin)) {
+      // ✅ Allow exact match or startsWith (to handle trailing slashes)
+      if (allowedOrigins.some(o => origin.startsWith(o))) {
         return cb(null, true);
-      } else {
-        return cb(new Error('Not allowed by CORS'));
       }
+
+      console.warn('❌ Blocked by CORS:', origin);
+      return cb(new Error('Not allowed by CORS: ' + origin));
     },
     credentials: true
   })
