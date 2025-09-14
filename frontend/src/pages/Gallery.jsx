@@ -9,6 +9,7 @@ export default function Gallery() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [allItems, setAllItems] = useState([])
   const [loading, setLoading] = useState(false)
+  const [isZoomed, setIsZoomed] = useState(false)
   const videoRef = useRef(null)
 
   const base = import.meta.env.VITE_BACKEND_URL
@@ -38,10 +39,12 @@ export default function Gallery() {
     setCurrentIndex(index)
     setLightboxOpen(true)
     setLoading(true)
+    setIsZoomed(false)
   }, [])
 
   const closeLightbox = useCallback(() => {
     setLightboxOpen(false)
+    setIsZoomed(false)
     // Pause any playing video when closing lightbox
     if (videoRef.current) {
       videoRef.current.pause()
@@ -52,6 +55,7 @@ export default function Gallery() {
     setCurrentIndex(prev => {
       const next = (prev + 1) % allItems.length
       setLoading(true)
+      setIsZoomed(false)
       return next
     })
   }, [allItems])
@@ -60,9 +64,16 @@ export default function Gallery() {
     setCurrentIndex(prev => {
       const prevIdx = (prev - 1 + allItems.length) % allItems.length
       setLoading(true)
+      setIsZoomed(false)
       return prevIdx
     })
   }, [allItems])
+
+  const toggleZoom = useCallback(() => {
+    if (allItems[currentIndex]?.type === 'image') {
+      setIsZoomed(prev => !prev)
+    }
+  }, [currentIndex, allItems])
 
   // Handle video play on mobile
   const handleVideoPlay = useCallback(() => {
@@ -89,10 +100,20 @@ export default function Gallery() {
       if (e.key === 'ArrowRight') nextItem()
       if (e.key === 'ArrowLeft') prevItem()
       if (e.key === 'Escape') closeLightbox()
+      if (e.key === ' ' && allItems[currentIndex]?.type === 'video') {
+        e.preventDefault()
+        if (videoRef.current) {
+          if (videoRef.current.paused) {
+            videoRef.current.play()
+          } else {
+            videoRef.current.pause()
+          }
+        }
+      }
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [lightboxOpen, nextItem, prevItem, closeLightbox])
+  }, [lightboxOpen, nextItem, prevItem, closeLightbox, currentIndex, allItems])
 
   // Preload next/previous images for smoother UX
   useEffect(() => {
@@ -201,10 +222,11 @@ export default function Gallery() {
                 <img
                   src={`${base}/api/files/${allItems[currentIndex].id}`}
                   alt="preview"
-                  className="lightbox-media"
+                  className={`lightbox-media ${isZoomed ? 'lightbox-media-zoomed' : ''}`}
                   loading="eager"
                   decoding="sync"
                   onLoad={() => setLoading(false)}
+                  onClick={toggleZoom}
                 />
               ) : (
                 <video
@@ -215,10 +237,10 @@ export default function Gallery() {
                   playsInline
                   muted
                   preload="auto"
-                  className="lightbox-media"
-                  style={{ maxHeight: '90vh', maxWidth: '100%' }}
+                  className="lightbox-media lightbox-video"
                   onLoadedData={handleVideoPlay}
                   onPlay={() => setLoading(false)}
+                  onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on video
                 />
               )}
             </motion.div>
