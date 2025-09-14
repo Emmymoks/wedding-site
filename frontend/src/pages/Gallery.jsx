@@ -22,6 +22,7 @@ export default function Gallery() {
       setImages(imgRes.data)
       setVideos(vidRes.data)
 
+      // keep items in order: images first, then videos
       const combined = [
         ...imgRes.data.map(i => ({ ...i, type: 'image' })),
         ...vidRes.data.map(v => ({ ...v, type: 'video' }))
@@ -63,7 +64,7 @@ export default function Gallery() {
               onClick={() => openLightbox(idx)}
             >
               <img
-                src={`${base}/api/files/${i.id}?thumb=1`} // thumbnail
+                src={`${base}/api/files/${i.id}?thumb=1`}
                 alt={i.originalname || 'gallery photo'}
                 className="cursor-pointer"
                 loading="lazy"
@@ -85,12 +86,11 @@ export default function Gallery() {
               onClick={() => openLightbox(images.length + idx)}
             >
               <img
-                src={`${base}/api/files/${v.id}?thumb=1`} // video thumbnail (snapshot)
+                src={`${base}/api/files/${v.id}?thumb=1`}
                 alt={v.originalname || 'gallery video'}
                 className="cursor-pointer"
                 loading="lazy"
               />
-              {/* play overlay */}
               <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-3xl font-bold">
                 ▶
               </div>
@@ -123,24 +123,23 @@ export default function Gallery() {
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.2}
-              onDragEnd={(e, { offset, velocity }) => {
-                const swipe = offset.x * velocity.x
-                if (swipe < -1000) {
+              onDragEnd={(e, { offset }) => {
+                if (offset.x < -100) {
                   nextItem()
-                } else if (swipe > 1000) {
+                } else if (offset.x > 100) {
                   prevItem()
                 }
               }}
             >
               {allItems[currentIndex]?.type === 'image' ? (
                 <img
-                  src={`${base}/api/files/${allItems[currentIndex].id}`} // full-res image
+                  src={`${base}/api/files/${allItems[currentIndex].id}`}
                   alt="preview"
                   className="lightbox-media"
                 />
               ) : (
                 <video
-                  src={`${base}/api/files/${allItems[currentIndex].id}`} // full video
+                  src={`${base}/api/files/${allItems[currentIndex].id}`}
                   controls
                   autoPlay
                   className="lightbox-media"
