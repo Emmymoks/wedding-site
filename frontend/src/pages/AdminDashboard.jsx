@@ -133,25 +133,27 @@ export default function AdminDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h3>Guest List</h3>
+        <h3 style={{ marginBottom: 16 }}>Guest List</h3>
         <form
           onSubmit={addGuest}
           className="row"
-          style={{ gap: 12, marginBottom: 20 }}
+          style={{ gap: 16, marginBottom: 24, flexWrap: 'wrap' }}
         >
           <input
             className="uploader-input"
             value={first}
             onChange={e => setFirst(e.target.value)}
             placeholder="First name"
+            style={{ flex: 1, minWidth: 200, padding: 10 }}
           />
           <input
             className="uploader-input"
             value={last}
             onChange={e => setLast(e.target.value)}
             placeholder="Last name"
+            style={{ flex: 1, minWidth: 200, padding: 10 }}
           />
-          <button className="btn btn-primary" type="submit">
+          <button className="btn btn-primary" type="submit" style={{ padding: '10px 20px' }}>
             Add
           </button>
         </form>
@@ -165,7 +167,7 @@ export default function AdminDashboard() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                padding: '10px 14px',
+                padding: '12px 16px',
                 borderBottom: '1px solid #eee'
               }}
             >
@@ -174,6 +176,7 @@ export default function AdminDashboard() {
               </span>
               <button
                 className="btn btn-secondary"
+                style={{ padding: '6px 14px' }}
                 onClick={() => deleteGuest(g._id)}
               >
                 Delete
@@ -189,9 +192,9 @@ export default function AdminDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h3>QR Scanner</h3>
-        <div id="reader" style={{ width: 300, marginBottom: 14 }}></div>
-        <div className="row gap" style={{ gap: 10, marginBottom: 10 }}>
+        <h3 style={{ marginBottom: 16 }}>QR Scanner</h3>
+        <div id="reader" style={{ width: 320, marginBottom: 16 }}></div>
+        <div className="row gap" style={{ gap: 12, marginBottom: 16 }}>
           <button className="btn btn-primary" onClick={startScanner}>
             Start
           </button>
@@ -210,7 +213,7 @@ export default function AdminDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h3>Uploads (Approve / Delete)</h3>
+        <h3 style={{ marginBottom: 16 }}>Uploads (Approve / Delete)</h3>
         <div
           className="gallery-grid"
           style={{
@@ -238,24 +241,24 @@ export default function AdminDashboard() {
                 {type.startsWith('video') ? (
                   <video
                     controls
-                    style={{ width: '100%', height: 160, objectFit: 'cover' }}
+                    style={{ width: '100%', height: 180, objectFit: 'cover' }}
                   >
-                    <source src={`${base}/api/files/${f._id}`} />
+                    <source src={`${base}/api/uploads/${f._id}/preview`} />
                   </video>
                 ) : (
                   <img
-                    src={`${base}/api/files/${f._id}`}
+                    src={`${base}/api/uploads/${f._id}/preview`}
                     alt={f.filename}
                     style={{
                       width: '100%',
-                      height: 160,
+                      height: 180,
                       objectFit: 'cover',
                       display: 'block'
                     }}
                   />
                 )}
-                <div className="photo-meta" style={{ padding: 12 }}>
-                  <span style={{ display: 'block', marginBottom: 8 }}>
+                <div className="photo-meta" style={{ padding: 14 }}>
+                  <span style={{ display: 'block', marginBottom: 10 }}>
                     <strong>{f.metadata?.uploader || 'Anonymous'}</strong> —{' '}
                     {f.metadata?.approved ? '✅ Approved' : '❌ Pending'}
                   </span>
@@ -264,20 +267,22 @@ export default function AdminDashboard() {
                       display: 'block',
                       fontSize: '0.85em',
                       color: '#666',
-                      marginBottom: 8
+                      marginBottom: 12
                     }}
                   >
                     {f.filename}
                   </span>
-                  <div className="row gap" style={{ gap: 10 }}>
+                  <div className="row gap" style={{ gap: 12 }}>
                     <button
                       className="btn btn-primary"
+                      style={{ padding: '8px 16px' }}
                       onClick={() => approveFile(f._id)}
                     >
                       Approve
                     </button>
                     <button
                       className="btn btn-secondary"
+                      style={{ padding: '8px 16px' }}
                       onClick={() => deleteFile(f._id)}
                     >
                       Delete
