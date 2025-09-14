@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Routes, Route, Link, useNavigate } from 'react-router-dom'
+import { Routes, Route, NavLink, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import Home from './pages/Home'
@@ -16,15 +16,21 @@ const Header = () => {
     <header className="header">
       {/* Brand */}
       <div className="brand" onClick={() => nav('/')}>
-        <div className="logo">W</div>
-        <div className="title">John & Doe Wedding</div>
+        <div className="logo">J&T</div>
+        <div className="title">Joy & Tobi Wedding</div>
       </div>
 
       {/* Desktop Nav */}
       <nav className="nav">
-        <Link to="/">Home</Link>
-        <Link to="/gallery">Gallery</Link>
-        <Link to="/upload">Upload</Link>
+        <NavLink to="/" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Home
+        </NavLink>
+        <NavLink to="/gallery" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Gallery
+        </NavLink>
+        <NavLink to="/upload" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Upload
+        </NavLink>
       </nav>
 
       {/* Mobile Toggle */}
@@ -44,9 +50,15 @@ const Header = () => {
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25 }}
           >
-            <Link to="/" onClick={() => setOpen(false)}>Home</Link>
-            <Link to="/gallery" onClick={() => setOpen(false)}>Gallery</Link>
-            <Link to="/upload" onClick={() => setOpen(false)}>Upload</Link>
+            <NavLink to="/" onClick={() => setOpen(false)} className={({ isActive }) => (isActive ? 'active' : '')}>
+              Home
+            </NavLink>
+            <NavLink to="/gallery" onClick={() => setOpen(false)} className={({ isActive }) => (isActive ? 'active' : '')}>
+              Gallery
+            </NavLink>
+            <NavLink to="/upload" onClick={() => setOpen(false)} className={({ isActive }) => (isActive ? 'active' : '')}>
+              Upload
+            </NavLink>
           </motion.nav>
         )}
       </AnimatePresence>
