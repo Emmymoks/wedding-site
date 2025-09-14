@@ -22,7 +22,6 @@ export default function Gallery() {
       setImages(imgRes.data)
       setVideos(vidRes.data)
 
-      // merge into single array for lightbox navigation
       const combined = [
         ...imgRes.data.map(i => ({ ...i, type: 'image' })),
         ...vidRes.data.map(v => ({ ...v, type: 'video' }))
@@ -83,26 +82,23 @@ export default function Gallery() {
         </div>
       </motion.div>
 
-      {/* Lightbox Popup */}
+      {/* Lightbox Overlay */}
       <AnimatePresence>
         {lightboxOpen && (
           <motion.div
-            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
+            className="lightbox-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             {/* Close Button */}
-            <button
-              className="absolute top-6 right-6 text-white text-4xl font-bold hover:scale-110 transition-transform"
-              onClick={closeLightbox}
-            >
+            <button className="lightbox-close" onClick={closeLightbox}>
               ×
             </button>
 
             <motion.div
               key={currentIndex}
-              className="max-w-5xl w-full px-4"
+              className="lightbox-content"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
@@ -112,14 +108,14 @@ export default function Gallery() {
                 <img
                   src={`${base}/api/files/${allItems[currentIndex].id}`}
                   alt="preview"
-                  className="w-full h-auto max-h-[85vh] object-contain mx-auto rounded-lg"
+                  className="lightbox-media"
                 />
               ) : (
                 <video
                   src={`${base}/api/files/${allItems[currentIndex].id}`}
                   controls
                   autoPlay
-                  className="w-full h-auto max-h-[85vh] object-contain mx-auto rounded-lg"
+                  className="lightbox-media"
                 />
               )}
             </motion.div>
