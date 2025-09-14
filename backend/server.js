@@ -15,13 +15,11 @@ const app = express();
 app.use(express.json());
 
 /* -------------------- CORS -------------------- */
-// Allow frontend (Vercel) + localhost for dev
 const allowedOrigins = [
   'http://localhost:5173',
   'https://wedding-site-sigma-indol.vercel.app'
 ];
 
-// Add any extra origins from env
 const extra = (process.env.ALLOWED_ORIGINS || '')
   .split(',')
   .map(s => s.trim())
@@ -32,14 +30,10 @@ allowedOrigins.push(...extra);
 app.use(
   cors({
     origin(origin, cb) {
-      // ✅ Allow requests with no origin (curl, Postman, mobile apps)
       if (!origin) return cb(null, true);
-
-      // ✅ Allow exact match or startsWith (to handle trailing slashes)
       if (allowedOrigins.some(o => origin.startsWith(o))) {
         return cb(null, true);
       }
-
       console.warn('❌ Blocked by CORS:', origin);
       return cb(new Error('Not allowed by CORS: ' + origin));
     },
@@ -48,18 +42,15 @@ app.use(
 );
 /* ------------------------------------------------- */
 
-// Environment
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/wedding';
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 const RESET_SECRET_KEY = process.env.RESET_SECRET_KEY || 'supersecretkey';
 const PORT = process.env.PORT || 5000;
-const HOST = '0.0.0.0'; // Always bind to all interfaces for Render
+const HOST = '0.0.0.0';
 
-// Models
 let gfs;
 let bucket;
 
-// Connect Mongoose and initialize GridFS
 async function initDb() {
   try {
     await mongoose.connect(MONGO_URI, {
@@ -82,30 +73,21 @@ async function initDb() {
   }
 }
 
-// Schemas & models
 const UserSchema = new mongoose.Schema({
   username: { type: String, unique: true },
   password: String
 });
-const User =
-  mongoose.models.User || mongoose.model('User', UserSchema);
+const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
 const GuestSchema = new mongoose.Schema({
   firstName: String,
   lastName: String
 });
-const Guest =
-  mongoose.models.Guest || mongoose.model('Guest', GuestSchema);
+const Guest = mongoose.models.Guest || mongoose.model('Guest', GuestSchema);
 
-const FileMetaSchema = new mongoose.Schema(
-  {},
-  { strict: false, collection: 'uploads.files' }
-);
-const FileMeta =
-  mongoose.models.FileMeta ||
-  mongoose.model('FileMeta', FileMetaSchema, 'uploads.files');
+const FileMetaSchema = new mongoose.Schema({}, { strict: false, collection: 'uploads.files' });
+const FileMeta = mongoose.models.FileMeta || mongoose.model('FileMeta', FileMetaSchema, 'uploads.files');
 
-// Auth middleware
 function authMiddleware(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth) return res.status(401).json({ error: 'No token' });
@@ -119,7 +101,6 @@ function authMiddleware(req, res, next) {
   }
 }
 
-// Ensure initial admin
 async function ensureAdmin() {
   try {
     const pwd = process.env.ADMIN_INIT_PASSWORD || 'admin123';
@@ -143,17 +124,13 @@ const storage = new GridFsStorage({
     new Promise((resolve, reject) => {
       crypto.randomBytes(16, (err, buf) => {
         if (err) return reject(err);
-        const filename =
-          buf.toString('hex') + path.extname(file.originalname);
+        const filename = buf.toString('hex') + path.extname(file.originalname);
         const fileInfo = {
           filename,
           bucketName: 'uploads',
           metadata: {
             originalname: file.originalname,
-            uploader:
-              req.body && req.body.uploader
-                ? req.body.uploader
-                : 'anonymous',
+            uploader: req.body && req.body.uploader ? req.body.uploader : 'anonymous',
             approved: false
           },
           contentType: file.mimetype
@@ -170,19 +147,12 @@ const upload = multer({ storage });
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password)
-      return res.status(400).json({ error: 'Missing credentials' });
+    if (!username || !password) return res.status(400).json({ error: 'Missing credentials' });
     const user = await User.findOne({ username }).exec();
-    if (!user)
-      return res.status(401).json({ error: 'Invalid credentials' });
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
     const ok = await bcrypt.compare(password, user.password);
-    if (!ok)
-      return res.status(401).json({ error: 'Invalid credentials' });
-    const token = jwt.sign(
-      { id: user._id, username: user.username },
-      JWT_SECRET,
-      { expiresIn: '12h' }
-    );
+    if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+    const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET, { expiresIn: '12h' });
     res.json({ token });
   } catch (err) {
     console.error('Login error:', err);
@@ -193,8 +163,7 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/auth/reset-password', async (req, res) => {
   try {
     const { username, newPassword, secretKey } = req.body;
-    if (secretKey !== RESET_SECRET_KEY)
-      return res.status(403).json({ error: 'Bad secret key' });
+    if (secretKey !== RESET_SECRET_KEY) return res.status(403).json({ error: 'Bad secret key' });
     const user = await User.findOne({ username }).exec();
     if (!user) return res.status(404).json({ error: 'User not found' });
     const hash = await bcrypt.hash(newPassword, 10);
@@ -211,8 +180,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
 app.post('/api/users', authMiddleware, async (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password)
-      return res.status(400).json({ error: 'Missing fields' });
+    if (!username || !password) return res.status(400).json({ error: 'Missing fields' });
     const hash = await bcrypt.hash(password, 10);
     const u = await User.create({ username, password: hash });
     res.json({ id: u._id, username: u.username });
@@ -237,9 +205,7 @@ app.delete('/api/guests/:id', authMiddleware, async (req, res) => {
   res.json({ ok: true });
 });
 app.put('/api/guests/:id', authMiddleware, async (req, res) => {
-  const g = await Guest.findByIdAndUpdate(req.params.id, req.body, {
-    new: true
-  }).exec();
+  const g = await Guest.findByIdAndUpdate(req.params.id, req.body, { new: true }).exec();
   res.json(g);
 });
 
@@ -249,10 +215,7 @@ app.post('/api/uploads', upload.array('files', 12), (req, res) => {
     const out = (req.files || []).map(f => ({
       id: f.id || f._id || null,
       filename: f.filename,
-      originalname:
-        (f.metadata && f.metadata.originalname) ||
-        f.originalname ||
-        ''
+      originalname: (f.metadata && f.metadata.originalname) || f.originalname || ''
     }));
     res.json({ files: out });
   } catch (err) {
@@ -276,11 +239,7 @@ app.get('/api/uploads', authMiddleware, async (req, res) => {
 app.post('/api/uploads/:id/approve', authMiddleware, async (req, res) => {
   try {
     const id = req.params.id;
-    const file = await FileMeta.findByIdAndUpdate(
-      id,
-      { $set: { 'metadata.approved': true } },
-      { new: true }
-    ).exec();
+    const file = await FileMeta.findByIdAndUpdate(id, { $set: { 'metadata.approved': true } }, { new: true }).exec();
     res.json(file);
   } catch (err) {
     console.error('Approve error:', err);
@@ -300,26 +259,28 @@ app.delete('/api/uploads/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// Stream/download file
+// Stream/download file (supports ?token= for admins)
 app.get('/api/files/:id', async (req, res) => {
   try {
     const _id = new mongoose.Types.ObjectId(req.params.id);
 
-    const files = await mongoose.connection.db
-      .collection('uploads.files')
-      .find({ _id })
-      .toArray();
-    if (!files || files.length === 0)
-      return res.status(404).json({ error: 'File not found' });
+    const files = await mongoose.connection.db.collection('uploads.files').find({ _id }).toArray();
+    if (!files || files.length === 0) return res.status(404).json({ error: 'File not found' });
     const file = files[0];
 
     let allow = false;
     if (file.metadata && file.metadata.approved) allow = true;
 
+    // Support Authorization header OR ?token query
     if (!allow) {
-      const auth = req.headers.authorization;
-      if (auth) {
-        const token = auth.split(' ')[1];
+      let token = null;
+      if (req.headers.authorization) {
+        token = req.headers.authorization.split(' ')[1];
+      } else if (req.query.token) {
+        token = req.query.token;
+      }
+
+      if (token) {
         try {
           jwt.verify(token, JWT_SECRET);
           allow = true;
@@ -372,10 +333,7 @@ app.get('/api/gallery', async (req, res) => {
     const q = { 'metadata.approved': true };
     if (type === 'image') q.contentType = { $regex: 'image' };
     if (type === 'video') q.contentType = { $regex: 'video' };
-    const files = await mongoose.connection.db
-      .collection('uploads.files')
-      .find(q)
-      .toArray();
+    const files = await mongoose.connection.db.collection('uploads.files').find(q).toArray();
     const out = files.map(f => ({
       id: f._id,
       filename: f.filename,
