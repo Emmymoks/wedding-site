@@ -41,6 +41,14 @@ export default function Gallery() {
     setLightboxOpen(false)
   }, [])
 
+  const nextItem = useCallback(() => {
+    setCurrentIndex(prev => (prev + 1) % allItems.length)
+  }, [allItems])
+
+  const prevItem = useCallback(() => {
+    setCurrentIndex(prev => (prev - 1 + allItems.length) % allItems.length)
+  }, [allItems])
+
   return (
     <div className="space-y-6">
       <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -103,6 +111,17 @@ export default function Gallery() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, { offset, velocity }) => {
+                const swipe = offset.x * velocity.x
+                if (swipe < -1000) {
+                  nextItem()
+                } else if (swipe > 1000) {
+                  prevItem()
+                }
+              }}
             >
               {allItems[currentIndex]?.type === 'image' ? (
                 <img
