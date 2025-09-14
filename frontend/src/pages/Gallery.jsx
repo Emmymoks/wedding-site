@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -9,6 +9,7 @@ export default function Gallery() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [allItems, setAllItems] = useState([])
   const [loading, setLoading] = useState(false)
+  const videoRef = useRef(null)
 
   const base = import.meta.env.VITE_BACKEND_URL
 
@@ -41,6 +42,10 @@ export default function Gallery() {
 
   const closeLightbox = useCallback(() => {
     setLightboxOpen(false)
+    // Pause any playing video when closing lightbox
+    if (videoRef.current) {
+      videoRef.current.pause()
+    }
   }, [])
 
   const nextItem = useCallback(() => {
@@ -59,7 +64,25 @@ export default function Gallery() {
     })
   }, [allItems])
 
-  // 🔑 Keyboard navigation
+  // Handle video play on mobile
+  const handleVideoPlay = useCallback(() => {
+    setLoading(false)
+    if (videoRef.current) {
+      // On mobile, we need to explicitly play the video
+      const playPromise = videoRef.current.play()
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.log("Auto-play was prevented:", error)
+          // Show controls if autoplay fails
+          if (videoRef.current) {
+            videoRef.current.controls = true
+          }
+        })
+      }
+    }
+  }, [])
+
+  // Keyboard navigation
   useEffect(() => {
     if (!lightboxOpen) return
     const handleKey = e => {
@@ -71,7 +94,7 @@ export default function Gallery() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [lightboxOpen, nextItem, prevItem, closeLightbox])
 
-  // 🔑 Preload next/previous images for smoother UX
+  // Preload next/previous images for smoother UX
   useEffect(() => {
     if (!lightboxOpen || allItems.length === 0) return
     const preload = index => {
@@ -145,6 +168,7 @@ export default function Gallery() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={closeLightbox}
           >
             <button className="lightbox-close" onClick={closeLightbox}>
               ×
@@ -164,6 +188,7 @@ export default function Gallery() {
                 if (offset.x < -100) nextItem()
                 else if (offset.x > 100) prevItem()
               }}
+              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on content
             >
               {/* Spinner */}
               {loading && (
@@ -183,6 +208,7 @@ export default function Gallery() {
                 />
               ) : (
                 <video
+                  ref={videoRef}
                   src={`${base}/api/files/${allItems[currentIndex].id}`}
                   controls
                   autoPlay
@@ -191,10 +217,29 @@ export default function Gallery() {
                   preload="auto"
                   className="lightbox-media"
                   style={{ maxHeight: '90vh', maxWidth: '100%' }}
-                  onLoadedData={() => setLoading(false)}
+                  onLoadedData={handleVideoPlay}
+                  onPlay={() => setLoading(false)}
                 />
               )}
             </motion.div>
+
+            {/* Navigation buttons */}
+            {allItems.length > 1 && (
+              <>
+                <button 
+                  className="lightbox-nav lightbox-nav-left" 
+                  onClick={(e) => { e.stopPropagation(); prevItem(); }}
+                >
+                  ‹
+                </button>
+                <button 
+                  className="lightbox-nav lightbox-nav-right" 
+                  onClick={(e) => { e.stopPropagation(); nextItem(); }}
+                >
+                  ›
+                </button>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
