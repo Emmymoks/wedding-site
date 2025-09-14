@@ -440,3 +440,95 @@ main {
 .lightbox-close:hover {
   transform: scale(1.2);
 }
+
+/* Lightbox Navigation Buttons */
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1002;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.lightbox-nav:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.lightbox-nav-left {
+  left: 20px;
+}
+
+.lightbox-nav-right {
+  right: 20px;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+  .lightbox-nav {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+  
+  .lightbox-nav-left {
+    left: 10px;
+  }
+  
+  .lightbox-nav-right {
+    right: 10px;
+  }
+  
+  .lightbox-close {
+    top: 15px;
+    right: 20px;
+    font-size: 32px;
+  }
+  
+  .lightbox-content {
+    max-width: 98%;
+    max-height: 85vh;
+  }
+  
+  .lightbox-media {
+    max-height: 85vh;
+  }
+}
+
+/* Video-specific styles for mobile */
+.lightbox-media video {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 85vh;
+}
+
+/* Loading spinner for lightbox */
+.lightbox-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  z-index: 1001;
+}
+
+@keyframes spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
