@@ -24,15 +24,12 @@ const app = express();
 app.use(express.json());
 
 /* -------------------- CORS -------------------- */
-// default allowed origins (dev + known frontends)
 const DEFAULT_ALLOWED = [
   'http://localhost:5173',
   'http://localhost:3000',
   'https://wedding-site-sigma-indol.vercel.app',
-  // add the Vercel hostname you referenced in logs — keep generic matching in code below
 ];
 
-// also allow additional via env
 const extra = (process.env.ALLOWED_ORIGINS || '')
   .split(',')
   .map(s => s.trim())
@@ -40,18 +37,13 @@ const extra = (process.env.ALLOWED_ORIGINS || '')
 
 const allowedOrigins = Array.from(new Set([...DEFAULT_ALLOWED, ...extra]));
 
-// permissive check: allow exact or origin startsWith any allowed origin
 app.use(
   cors({
     origin(origin, cb) {
-      // allow non-browser requests (curl, server-to-server)
       if (!origin) return cb(null, true);
-
-      // exact match or startsWith (for subpaths or trailing slash differences)
       if (allowedOrigins.some(o => origin === o || origin.startsWith(o))) {
         return cb(null, true);
       }
-
       console.warn('❌ Blocked by CORS:', origin);
       return cb(new Error('Not allowed by CORS: ' + origin));
     },
@@ -223,7 +215,6 @@ async function generateVideoThumbnail(originalFile) {
     const tempInput = path.join(os.tmpdir(), `${_id}.bin`);
     const tempOutput = path.join(os.tmpdir(), `${_id}_thumb.jpg`);
 
-    // Save video locally from GridFS
     await new Promise((resolve, reject) => {
       const writeStream = fs.createWriteStream(tempInput);
       bucket.openDownloadStream(_id)
@@ -232,14 +223,13 @@ async function generateVideoThumbnail(originalFile) {
         .on('error', reject);
     });
 
-    // Extract a single frame (first second)
-    await new Promise((resolve, reject) {
+    await new Promise((resolve, reject) => {
       ffmpeg(tempInput)
         .screenshots({
           count: 1,
           folder: path.dirname(tempOutput),
           filename: path.basename(tempOutput),
-          timemarks: [ '00:00:01.000' ], // attempt at 1s
+          timemarks: [ '00:00:01.000' ],
           size: '320x?'
         })
         .on('end', resolve)
@@ -248,7 +238,6 @@ async function generateVideoThumbnail(originalFile) {
 
     const thumbBuf = fs.readFileSync(tempOutput);
 
-    // Save thumbnail to GridFS
     const uploadStream = bucket.openUploadStream(originalFile.filename + '_thumb.jpg', {
       metadata: {
         originalId: new mongoose.Types.ObjectId(originalFile._id),
@@ -270,7 +259,6 @@ async function generateVideoThumbnail(originalFile) {
         } catch (e) {
           resolve(null);
         } finally {
-          // cleanup temp files
           try { fs.unlinkSync(tempInput); } catch (e) {}
           try { fs.unlinkSync(tempOutput); } catch (e) {}
         }
@@ -384,11 +372,9 @@ app.post('/api/uploads', upload.array('files', 12), async (req, res) => {
       contentType: f.contentType
     }));
 
-    // generate thumbnails asynchronously (non-blocking)
     (async () => {
       try {
         for (const f of req.files || []) {
-          // fetch stored doc
           const stored = await mongoose.connection.db.collection('uploads.files').findOne({ _id: f.id || f._id });
           if (!stored) continue;
           const existingThumb = await findThumbnailByOriginalId(stored._id);
@@ -396,10 +382,8 @@ app.post('/api/uploads', upload.array('files', 12), async (req, res) => {
 
           if (stored.contentType && stored.contentType.match(/^image\//)) {
             await generateImageThumbnail(stored);
-            console.log('Generated image thumbnail for', stored._id.toString());
           } else if (stored.contentType && stored.contentType.match(/^video\//)) {
             await generateVideoThumbnail(stored);
-            console.log('Generated video thumbnail for', stored._id.toString());
           }
         }
       } catch (err) {
@@ -437,27 +421,18 @@ app.post('/api/uploads/:id/approve', authMiddleware, async (req, res) => {
   }
 });
 
-// Delete file (and delete any thumbnails referencing it)
+// Delete file (and thumbnails)
 app.delete('/api/uploads/:id', authMiddleware, async (req, res) => {
   const id = req.params.id;
   try {
-    // delete original
     await bucket.delete(new mongoose.Types.ObjectId(id));
-
-    // delete any thumbnails referencing this original
     const thumbs = await mongoose.connection.db
       .collection('uploads.files')
       .find({ 'metadata.originalId': new mongoose.Types.ObjectId(id) })
       .toArray();
-
     for (const t of thumbs) {
-      try {
-        await bucket.delete(t._id);
-      } catch (e) {
-        // ignore
-      }
+      try { await bucket.delete(t._id); } catch {}
     }
-
     res.json({ ok: true });
   } catch (e) {
     console.error('Delete file error:', e);
@@ -465,224 +440,105 @@ app.delete('/api/uploads/:id', authMiddleware, async (req, res) => {
   }
 });
 
-/* Stream/download file
-   - public access for approved files
-   - admin preview via Authorization header OR ?token query param
-   - thumbnail via ?thumb=1
-   - supports HTTP range requests for videos
-*/
+/* Stream/download file with HTTP range for videos */
 app.get('/api/files/:id', async (req, res) => {
   try {
     const _id = new mongoose.Types.ObjectId(req.params.id);
-
     const files = await mongoose.connection.db.collection('uploads.files').find({ _id }).toArray();
     if (!files || files.length === 0) return res.status(404).json({ error: 'File not found' });
     const file = files[0];
 
     const wantsThumb = req.query.thumb && (req.query.thumb === '1' || req.query.thumb === 'true');
-
-    // If thumbnail requested and original is image/video -> try to find stored thumbnail
     if (wantsThumb) {
-      // look for thumbnail referencing this original
       const thumb = await findThumbnailByOriginalId(file._id);
       if (thumb) {
         res.set('Content-Type', thumb.contentType || 'image/jpeg');
-        res.set('Cache-Control', 'public, max-age=604800'); // 7 days
-        const thumbStream = bucket.openDownloadStream(thumb._id);
-        return thumbStream.pipe(res);
-      } else {
-        // If original is image, attempt to generate on-the-fly and stream
-        if (file.contentType && file.contentType.match(/^image\//)) {
-          const generated = await generateImageThumbnail(file);
-          if (generated) {
-            res.set('Content-Type', generated.contentType || 'image/jpeg');
-            res.set('Cache-Control', 'public, max-age=604800');
-            const s = bucket.openDownloadStream(generated._id);
-            return s.pipe(res);
-          }
-        }
-        // For videos, try generate a video thumb (might be slow) and stream if created
-        if (file.contentType && file.contentType.match(/^video\//)) {
-          const generated = await generateVideoThumbnail(file);
-          if (generated) {
-            res.set('Content-Type', generated.contentType || 'image/jpeg');
-            res.set('Cache-Control', 'public, max-age=604800');
-            const s = bucket.openDownloadStream(generated._id);
-            return s.pipe(res);
-          }
-        }
-        // fallback to original file stream if thumbnail not available
+        res.set('Cache-Control', 'public, max-age=604800');
+        return bucket.openDownloadStream(thumb._id).pipe(res);
       }
     }
 
-    // Authorization for original/inline file
     let allow = false;
     if (file.metadata && file.metadata.approved) allow = true;
-
-    // Support Authorization header OR ?token query
-    if (!allow) {
-      let token = null;
-      if (req.headers.authorization) {
-        token = req.headers.authorization.split(' ')[1];
-      } else if (req.query.token) {
-        token = req.query.token;
-      }
-
-      if (token) {
-        try {
-          jwt.verify(token, JWT_SECRET);
-          allow = true;
-        } catch {
-          allow = false;
-        }
-      }
+    let token = null;
+    if (req.headers.authorization) {
+      token = req.headers.authorization.split(' ')[1];
+    } else if (req.query.token) {
+      token = req.query.token;
     }
-
+    if (!allow && token) {
+      try {
+        jwt.verify(token, JWT_SECRET);
+        allow = true;
+      } catch { allow = false; }
+    }
     if (!allow) return res.status(403).json({ error: 'Not approved yet' });
 
-    // Set proper content type
-    res.set('Content-Type', file.contentType || 'application/octet-stream');
-    
-    // Handle HTTP range requests for videos
-    if (file.contentType && file.contentType.startsWith('video/') && req.headers.range) {
-      try {
-        // Get file size
-        const fileSize = file.length;
-        
-        // Parse range header
-        const range = req.headers.range;
-        const parts = range.replace(/bytes=/, "").split("-");
+    const contentType = file.contentType || 'application/octet-stream';
+    const forceDownload = req.query.download && req.query.download !== '0';
+    const filename = (file.metadata?.originalname || file.filename).replace(/"/g, '');
+    res.set('Content-Disposition', (forceDownload ? 'attachment' : 'inline') + `; filename="${filename}"`);
+
+    if (contentType.startsWith('video/')) {
+      const range = req.headers.range;
+      if (range) {
+        const parts = range.replace(/bytes=/, '').split('-');
         const start = parseInt(parts[0], 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-        const chunkSize = (end - start) + 1;
-        
-        // Create read stream for the specific range
-        const readStream = bucket.openDownloadStream(_id, { start, end: end + 1 });
-        
-        // Set headers for partial content
+        const end = parts[1] ? parseInt(parts[1], 10) : file.length - 1;
+        const chunkSize = end - start + 1;
+
         res.writeHead(206, {
-          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+          'Content-Range': `bytes ${start}-${end}/${file.length}`,
           'Accept-Ranges': 'bytes',
           'Content-Length': chunkSize,
-          'Content-Type': file.contentType,
+          'Content-Type': contentType,
         });
-        
-        // Pipe the stream to response
-        return readStream.pipe(res);
-      } catch (error) {
-        console.error('Error handling range request:', error);
-        // Fall back to regular streaming if range request fails
+
+        return bucket.openDownloadStream(_id, { start, end: end + 1 }).pipe(res);
       }
+
+      res.writeHead(200, {
+        'Content-Length': file.length,
+        'Content-Type': contentType,
+        'Accept-Ranges': 'bytes',
+      });
+      return bucket.openDownloadStream(_id).pipe(res);
     }
 
-    // Regular file streaming for non-videos or videos without range requests
-    const forceDownload = req.query.download && req.query.download !== '0';
-    if (forceDownload) {
-      res.set(
-        'Content-Disposition',
-        'attachment; filename="' +
-          (file.metadata && file.metadata.originalname
-            ? file.metadata.originalname.replace(/"/g, '')
-            : file.filename) +
-          '"'
-      );
-    } else {
-      res.set(
-        'Content-Disposition',
-        'inline; filename="' +
-          (file.metadata && file.metadata.originalname
-            ? file.metadata.originalname.replace(/"/g, '')
-            : file.filename) +
-          '"'
-      );
-    }
+    res.set('Content-Type', contentType);
+    return bucket.openDownloadStream(_id).pipe(res);
 
-    // For videos, set headers to allow seeking
-    if (file.contentType && file.contentType.startsWith('video/')) {
-      res.set('Accept-Ranges', 'bytes');
-      res.set('Content-Length', file.length);
-    }
-
-    const downloadStream = bucket.openDownloadStream(_id);
-    downloadStream.on('error', err => {
-      console.error('Download stream error:', err);
-      res.status(404).end();
-    });
-    downloadStream.pipe(res);
   } catch (e) {
     console.error('Stream file error:', e);
     res.status(400).json({ error: e.message });
   }
 });
 
-// Convenience thumbnail endpoint (returns thumbnail for original file id)
+// Get thumbnail by id
 app.get('/api/thumbnails/:id', async (req, res) => {
   try {
-    const originalId = new mongoose.Types.ObjectId(req.params.id);
-    // find existing thumbnail referencing original id
-    const thumb = await mongoose.connection.db.collection('uploads.files').findOne({ 'metadata.originalId': originalId, 'metadata.isThumbnail': true });
-
-    if (thumb) {
-      res.set('Content-Type', thumb.contentType || 'image/jpeg');
-      res.set('Cache-Control', 'public, max-age=604800');
-      const thumbStream = bucket.openDownloadStream(thumb._id);
-      return thumbStream.pipe(res);
-    }
-
-    // If no thumb found, try to fetch original and generate if image/video
-    const orig = await mongoose.connection.db.collection('uploads.files').findOne({ _id: originalId });
-    if (!orig) return res.status(404).json({ error: 'Original file not found' });
-
-    if (orig.contentType && orig.contentType.match(/^image\//)) {
-      const generated = await generateImageThumbnail(orig);
-      if (generated) {
-        res.set('Content-Type', generated.contentType || 'image/jpeg');
-        res.set('Cache-Control', 'public, max-age=604800');
-        const s = bucket.openDownloadStream(generated._id);
-        return s.pipe(res);
-      }
-    } else if (orig.contentType && orig.contentType.match(/^video\//)) {
-      const generated = await generateVideoThumbnail(orig);
-      if (generated) {
-        res.set('Content-Type', generated.contentType || 'image/jpeg');
-        res.set('Cache-Control', 'public, max-age=604800');
-        const s = bucket.openDownloadStream(generated._id);
-        return s.pipe(res);
-      }
-    }
-
-    // fallback: stream original (but this will be full file)
-    res.set('Content-Type', orig.contentType || 'application/octet-stream');
-    bucket.openDownloadStream(originalId).pipe(res);
+    const id = new mongoose.Types.ObjectId(req.params.id);
+    const thumb = await findThumbnailByOriginalId(id);
+    if (!thumb) return res.status(404).json({ error: 'Thumbnail not found' });
+    res.set('Content-Type', thumb.contentType || 'image/jpeg');
+    return bucket.openDownloadStream(thumb._id).pipe(res);
   } catch (e) {
-    console.error('Thumbnail error:', e);
-    res.status(500).json({ error: 'Thumbnail generation error' });
+    res.status(400).json({ error: e.message });
   }
 });
 
-// Gallery (public, approved only)
-// returns metadata only — clients should request thumbnail via /api/files/:id?thumb=1 or /api/thumbnails/:id
+// Public gallery (only approved)
 app.get('/api/gallery', async (req, res) => {
   try {
-    const type = req.query.type;
-    const q = { 'metadata.approved': true };
-    if (type === 'image') q.contentType = { $regex: 'image' };
-    if (type === 'video') q.contentType = { $regex: 'video' };
-    const files = await mongoose.connection.db.collection('uploads.files').find(q).toArray();
-    const out = files.map(f => ({
-      id: f._id,
-      filename: f.filename,
-      originalname: f.metadata && f.metadata.originalname,
-      contentType: f.contentType
-    }));
-    res.json(out);
-  } catch (err) {
-    console.error('Gallery list error:', err);
+    const files = await FileMeta.find({ 'metadata.approved': true }).lean().exec();
+    res.json(files);
+  } catch (e) {
+    console.error('Gallery error:', e);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// health
+// Root route
 app.get('/', (req, res) => res.send('Wedding backend running'));
 
 /* ---------- Start Server ---------- */
