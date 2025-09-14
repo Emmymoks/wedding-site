@@ -10,9 +10,8 @@ export default function Gallery() {
   const [allItems, setAllItems] = useState([])
   const [loading, setLoading] = useState(false)
   const [isZoomed, setIsZoomed] = useState(false)
-  const [muted, setMuted] = useState(true) // 🔑 mobile-safe default mute
-
   const videoRef = useRef(null)
+
   const base = import.meta.env.VITE_BACKEND_URL
 
   useEffect(() => {
@@ -41,13 +40,15 @@ export default function Gallery() {
     setLightboxOpen(true)
     setLoading(true)
     setIsZoomed(false)
-    setMuted(true) // reset mute
   }, [])
 
   const closeLightbox = useCallback(() => {
     setLightboxOpen(false)
     setIsZoomed(false)
-    if (videoRef.current) videoRef.current.pause()
+    // Pause any playing video when closing lightbox
+    if (videoRef.current) {
+      videoRef.current.pause()
+    }
   }, [])
 
   const nextItem = useCallback(() => {
@@ -55,7 +56,6 @@ export default function Gallery() {
       const next = (prev + 1) % allItems.length
       setLoading(true)
       setIsZoomed(false)
-      setMuted(true)
       return next
     })
   }, [allItems])
@@ -65,7 +65,6 @@ export default function Gallery() {
       const prevIdx = (prev - 1 + allItems.length) % allItems.length
       setLoading(true)
       setIsZoomed(false)
-      setMuted(true)
       return prevIdx
     })
   }, [allItems])
@@ -76,13 +75,19 @@ export default function Gallery() {
     }
   }, [currentIndex, allItems])
 
-  const handleVideoLoad = useCallback(() => {
+  // Handle video play on mobile
+  const handleVideoPlay = useCallback(() => {
     setLoading(false)
     if (videoRef.current) {
+      // On mobile, we need to explicitly play the video
       const playPromise = videoRef.current.play()
       if (playPromise !== undefined) {
-        playPromise.catch(err => {
-          console.log("Autoplay blocked, waiting for user gesture:", err)
+        playPromise.catch(error => {
+          console.log("Auto-play was prevented:", error)
+          // Show controls if autoplay fails
+          if (videoRef.current) {
+            videoRef.current.controls = true
+          }
         })
       }
     }
@@ -95,12 +100,22 @@ export default function Gallery() {
       if (e.key === 'ArrowRight') nextItem()
       if (e.key === 'ArrowLeft') prevItem()
       if (e.key === 'Escape') closeLightbox()
+      if (e.key === ' ' && allItems[currentIndex]?.type === 'video') {
+        e.preventDefault()
+        if (videoRef.current) {
+          if (videoRef.current.paused) {
+            videoRef.current.play()
+          } else {
+            videoRef.current.pause()
+          }
+        }
+      }
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [lightboxOpen, nextItem, prevItem, closeLightbox])
+  }, [lightboxOpen, nextItem, prevItem, closeLightbox, currentIndex, allItems])
 
-  // Preload next/previous images
+  // Preload next/previous images for smoother UX
   useEffect(() => {
     if (!lightboxOpen || allItems.length === 0) return
     const preload = index => {
@@ -194,7 +209,7 @@ export default function Gallery() {
                 if (offset.x < -100) nextItem()
                 else if (offset.x > 100) prevItem()
               }}
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on content
             >
               {/* Spinner */}
               {loading && (
@@ -214,54 +229,34 @@ export default function Gallery() {
                   onClick={toggleZoom}
                 />
               ) : (
-                <div className="relative">
-                  <video
-                    ref={videoRef}
-                    src={`${base}/api/files/${allItems[currentIndex].id}`}
-                    controls
-                    autoPlay
-                    playsInline
-                    muted={muted}
-                    preload="auto"
-                    className="lightbox-media lightbox-video"
-                    onLoadedData={handleVideoLoad}
-                    onClick={e => e.stopPropagation()}
-                  />
-                  {/* Unmute button */}
-                  <button
-                    className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-2 rounded"
-                    onClick={() => {
-                      setMuted(m => !m)
-                      if (videoRef.current) {
-                        videoRef.current.muted = !videoRef.current.muted
-                        if (videoRef.current.paused) videoRef.current.play()
-                      }
-                    }}
-                  >
-                    {muted ? '🔇 Unmute' : '🔊 Mute'}
-                  </button>
-                </div>
+                <video
+                  ref={videoRef}
+                  src={`${base}/api/files/${allItems[currentIndex].id}`}
+                  controls
+                  autoPlay
+                  playsInline
+                  muted
+                  preload="auto"
+                  className="lightbox-media lightbox-video"
+                  onLoadedData={handleVideoPlay}
+                  onPlay={() => setLoading(false)}
+                  onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on video
+                />
               )}
             </motion.div>
 
-            {/* Navigation */}
+            {/* Navigation buttons */}
             {allItems.length > 1 && (
               <>
-                <button
-                  className="lightbox-nav lightbox-nav-left"
-                  onClick={e => {
-                    e.stopPropagation()
-                    prevItem()
-                  }}
+                <button 
+                  className="lightbox-nav lightbox-nav-left" 
+                  onClick={(e) => { e.stopPropagation(); prevItem(); }}
                 >
                   ‹
                 </button>
-                <button
-                  className="lightbox-nav lightbox-nav-right"
-                  onClick={e => {
-                    e.stopPropagation()
-                    nextItem()
-                  }}
+                <button 
+                  className="lightbox-nav lightbox-nav-right" 
+                  onClick={(e) => { e.stopPropagation(); nextItem(); }}
                 >
                   ›
                 </button>
