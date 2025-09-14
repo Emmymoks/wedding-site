@@ -22,15 +22,35 @@ export default function AdminDashboard() {
 
   async function fetchAll() {
     try {
+      // Guests
       const g = await axios.get(`${base}/api/guests`, {
         headers: { Authorization: 'Bearer ' + token }
       })
       setGuests(g.data)
 
+      // Files metadata
       const f = await axios.get(`${base}/api/uploads`, {
         headers: { Authorization: 'Bearer ' + token }
       })
-      setFiles(f.data)
+
+      // For each file, fetch blob if not approved (needs auth) or approved (public is fine too)
+      const withPreviews = await Promise.all(
+        f.data.map(async file => {
+          try {
+            const res = await axios.get(`${base}/api/files/${file._id}`, {
+              headers: { Authorization: 'Bearer ' + token },
+              responseType: 'blob'
+            })
+            const url = URL.createObjectURL(res.data)
+            return { ...file, previewUrl: url }
+          } catch (err) {
+            console.error('Preview fetch failed:', file._id, err)
+            return { ...file, previewUrl: null }
+          }
+        })
+      )
+
+      setFiles(withPreviews)
     } catch (e) {
       console.error(e)
     }
@@ -238,24 +258,40 @@ export default function AdminDashboard() {
                   flexDirection: 'column'
                 }}
               >
-                {type.startsWith('video') ? (
-                  <video
-                    controls
-                    style={{ width: '100%', height: 180, objectFit: 'cover' }}
-                  >
-                    <source src={`${base}/api/files/${f._id}`} />
-                  </video>
+                {f.previewUrl ? (
+                  type.startsWith('video') ? (
+                    <video
+                      controls
+                      style={{ width: '100%', height: 180, objectFit: 'cover' }}
+                    >
+                      <source src={f.previewUrl} type={f.contentType} />
+                    </video>
+                  ) : (
+                    <img
+                      src={f.previewUrl}
+                      alt={f.filename}
+                      style={{
+                        width: '100%',
+                        height: 180,
+                        objectFit: 'cover',
+                        display: 'block'
+                      }}
+                    />
+                  )
                 ) : (
-                  <img
-                    src={`${base}/api/files/${f._id}`}
-                    alt={f.filename}
+                  <div
                     style={{
                       width: '100%',
                       height: 180,
-                      objectFit: 'cover',
-                      display: 'block'
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: '#f9f9f9',
+                      color: '#888'
                     }}
-                  />
+                  >
+                    Preview not available
+                  </div>
                 )}
                 <div className="photo-meta" style={{ padding: 14 }}>
                   <span style={{ display: 'block', marginBottom: 10 }}>
