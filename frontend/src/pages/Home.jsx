@@ -31,7 +31,7 @@ export default function Home() {
 
   // use backend thumbnails if available, otherwise fallback
   const previewItems = latest.length
-    ? latest.map(i => `${base}/api/thumbnails/${i.id}`)
+    ? latest.map(i => `${base}/api/files/${i.id}?thumb=1`)
     : fallback
 
   return (
