@@ -243,11 +243,11 @@ export default function AdminDashboard() {
                     controls
                     style={{ width: '100%', height: 180, objectFit: 'cover' }}
                   >
-                    <source src={`${base}/api/uploads/${f._id}/preview`} />
+                    <source src={`${base}/api/files/${f._id}`} />
                   </video>
                 ) : (
                   <img
-                    src={`${base}/api/uploads/${f._id}/preview`}
+                    src={`${base}/api/files/${f._id}`}
                     alt={f.filename}
                     style={{
                       width: '100%',
