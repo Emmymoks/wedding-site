@@ -11,7 +11,7 @@ export default function AdminDashboard() {
   const [first, setFirst] = useState('')
   const [last, setLast] = useState('')
   const [scanResult, setScanResult] = useState('')
-  const [showPendingOnly, setShowPendingOnly] = useState(false) // 🔥 filter toggle state
+  const [showPendingOnly, setShowPendingOnly] = useState(false)
   const token = localStorage.getItem('token')
   const scannerRef = useRef(null)
   const base = import.meta.env.VITE_BACKEND_URL
@@ -34,14 +34,14 @@ export default function AdminDashboard() {
         headers: { Authorization: 'Bearer ' + token }
       })
 
-      // Instead of downloading full files, just attach thumbnail URLs
+      // Attach lightweight previews (images: thumb, videos: snapshot thumb)
       const withPreviews = f.data.map(file => {
         const type = file.mimetype || file.contentType || ''
         return {
           ...file,
           previewUrl: type.startsWith('video')
-            ? `${base}/api/files/${file._id}` // keep full video for now
-            : `${base}/api/thumbnails/${file._id}` // small preview for images
+            ? `${base}/api/files/${file._id}?thumb=1` // 🔥 video snapshot thumbnail
+            : `${base}/api/files/${file._id}?thumb=1` // 🔥 image thumbnail
         }
       })
 
@@ -113,15 +113,15 @@ export default function AdminDashboard() {
   function checkGuest(decoded) {
     const norm = decoded.trim().toLowerCase()
     const found = guests.find(
-      g =>
-        (g.firstName + ' ' + g.lastName).trim().toLowerCase() === norm
+      g => (g.firstName + ' ' + g.lastName).trim().toLowerCase() === norm
     )
-    if (found)
+    if (found) {
       alert('✅ Confirmed Guest: ' + (found.firstName + ' ' + found.lastName))
-    else alert('❌ Invalid Guest QR')
+    } else {
+      alert('❌ Invalid Guest QR')
+    }
   }
 
-  // 🔥 filter logic
   const displayedFiles = showPendingOnly
     ? files.filter(f => !f.metadata?.approved)
     : files
@@ -227,7 +227,7 @@ export default function AdminDashboard() {
         </div>
       </motion.div>
 
-      {/* File Approvals with Preview */}
+      {/* File Approvals */}
       <motion.div
         className="card"
         initial={{ opacity: 0, y: 20 }}
@@ -265,12 +265,17 @@ export default function AdminDashboard() {
                 }}
               >
                 {type.startsWith('video') ? (
-                  <video
-                    controls
-                    style={{ width: '100%', height: 180, objectFit: 'cover' }}
-                  >
-                    <source src={f.previewUrl} type={f.contentType} />
-                  </video>
+                  <img
+                    src={f.previewUrl}
+                    alt={f.filename}
+                    style={{
+                      width: '100%',
+                      height: 180,
+                      objectFit: 'cover',
+                      display: 'block'
+                    }}
+                    loading="lazy"
+                  />
                 ) : (
                   <img
                     src={f.previewUrl}
