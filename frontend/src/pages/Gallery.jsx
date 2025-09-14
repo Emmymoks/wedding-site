@@ -1,181 +1,151 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState, useCallback, useRef } from 'react'
+import axios from 'axios'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function Gallery() {
-  const [images, setImages] = useState([]);
-  const [videos, setVideos] = useState([]);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [allItems, setAllItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const videoRef = useRef(null);
+  const [images, setImages] = useState([])
+  const [videos, setVideos] = useState([])
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [allItems, setAllItems] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [isZoomed, setIsZoomed] = useState(false)
+  const videoRef = useRef(null)
 
-  const base = import.meta.env.VITE_BACKEND_URL;
+  const base = import.meta.env.VITE_BACKEND_URL
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    fetchData()
+  }, [])
 
   async function fetchData() {
     try {
-      const [imgRes, vidRes] = await Promise.all([
-        axios.get(`${base}/api/gallery?type=image`),
-        axios.get(`${base}/api/gallery?type=video`)
-      ]);
-      
-      setImages(imgRes.data);
-      setVideos(vidRes.data);
+      const imgRes = await axios.get(`${base}/api/gallery?type=image`)
+      const vidRes = await axios.get(`${base}/api/gallery?type=video`)
+      setImages(imgRes.data)
+      setVideos(vidRes.data)
 
       const combined = [
         ...imgRes.data.map(i => ({ ...i, type: 'image' })),
         ...vidRes.data.map(v => ({ ...v, type: 'video' }))
-      ];
-      setAllItems(combined);
+      ]
+      setAllItems(combined)
     } catch (e) {
-      console.error('Error fetching gallery data:', e);
+      console.error(e)
     }
   }
 
   const openLightbox = useCallback(index => {
-    setCurrentIndex(index);
-    setLightboxOpen(true);
-    setLoading(true);
-    setIsZoomed(false);
-  }, []);
+    setCurrentIndex(index)
+    setLightboxOpen(true)
+    setLoading(true)
+    setIsZoomed(false)
+  }, [])
 
   const closeLightbox = useCallback(() => {
-    setLightboxOpen(false);
-    setIsZoomed(false);
-    
+    setLightboxOpen(false)
+    setIsZoomed(false)
     // Pause any playing video when closing lightbox
     if (videoRef.current) {
-      videoRef.current.pause();
+      videoRef.current.pause()
     }
-  }, []);
+  }, [])
 
   const nextItem = useCallback(() => {
     setCurrentIndex(prev => {
-      const next = (prev + 1) % allItems.length;
-      setLoading(true);
-      setIsZoomed(false);
-      return next;
-    });
-  }, [allItems.length]);
+      const next = (prev + 1) % allItems.length
+      setLoading(true)
+      setIsZoomed(false)
+      return next
+    })
+  }, [allItems])
 
   const prevItem = useCallback(() => {
     setCurrentIndex(prev => {
-      const prevIdx = (prev - 1 + allItems.length) % allItems.length;
-      setLoading(true);
-      setIsZoomed(false);
-      return prevIdx;
-    });
-  }, [allItems.length]);
+      const prevIdx = (prev - 1 + allItems.length) % allItems.length
+      setLoading(true)
+      setIsZoomed(false)
+      return prevIdx
+    })
+  }, [allItems])
 
   const toggleZoom = useCallback(() => {
     if (allItems[currentIndex]?.type === 'image') {
-      setIsZoomed(prev => !prev);
+      setIsZoomed(prev => !prev)
     }
-  }, [currentIndex, allItems]);
+  }, [currentIndex, allItems])
 
   // Handle video play on mobile
   const handleVideoPlay = useCallback(() => {
-    setLoading(false);
+    setLoading(false)
     if (videoRef.current) {
       // On mobile, we need to explicitly play the video
-      const playPromise = videoRef.current.play();
+      const playPromise = videoRef.current.play()
       if (playPromise !== undefined) {
         playPromise.catch(error => {
-          console.log("Auto-play was prevented:", error);
+          console.log("Auto-play was prevented:", error)
           // Show controls if autoplay fails
           if (videoRef.current) {
-            videoRef.current.controls = true;
+            videoRef.current.controls = true
           }
-        });
+        })
       }
     }
-  }, []);
+  }, [])
 
   // Keyboard navigation
   useEffect(() => {
-    if (!lightboxOpen) return;
-    
+    if (!lightboxOpen) return
     const handleKey = e => {
-      switch(e.key) {
-        case 'ArrowRight':
-          nextItem();
-          break;
-        case 'ArrowLeft':
-          prevItem();
-          break;
-        case 'Escape':
-          closeLightbox();
-          break;
-        case ' ':
-          if (allItems[currentIndex]?.type === 'video') {
-            e.preventDefault();
-            if (videoRef.current) {
-              if (videoRef.current.paused) {
-                videoRef.current.play();
-              } else {
-                videoRef.current.pause();
-              }
-            }
+      if (e.key === 'ArrowRight') nextItem()
+      if (e.key === 'ArrowLeft') prevItem()
+      if (e.key === 'Escape') closeLightbox()
+      if (e.key === ' ' && allItems[currentIndex]?.type === 'video') {
+        e.preventDefault()
+        if (videoRef.current) {
+          if (videoRef.current.paused) {
+            videoRef.current.play()
+          } else {
+            videoRef.current.pause()
           }
-          break;
-        default:
-          break;
+        }
       }
-    };
-    
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [lightboxOpen, nextItem, prevItem, closeLightbox, currentIndex, allItems]);
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [lightboxOpen, nextItem, prevItem, closeLightbox, currentIndex, allItems])
 
   // Preload next/previous images for smoother UX
   useEffect(() => {
-    if (!lightboxOpen || allItems.length === 0) return;
-    
+    if (!lightboxOpen || allItems.length === 0) return
     const preload = index => {
-      const item = allItems[index];
-      if (!item || item.type !== 'image') return;
-      
-      const img = new Image();
-      img.src = `${base}/api/files/${item.id}`;
-    };
-    
-    preload((currentIndex + 1) % allItems.length);
-    preload((currentIndex - 1 + allItems.length) % allItems.length);
-  }, [lightboxOpen, currentIndex, allItems, base]);
-
-  // Reset video ref when current item changes
-  useEffect(() => {
-    if (allItems[currentIndex]?.type === 'video' && videoRef.current) {
-      videoRef.current.currentTime = 0;
+      const item = allItems[index]
+      if (!item) return
+      if (item.type === 'image') {
+        const img = new Image()
+        img.src = `${base}/api/files/${item.id}`
+      }
     }
-  }, [currentIndex, allItems]);
+    preload((currentIndex + 1) % allItems.length)
+    preload((currentIndex - 1 + allItems.length) % allItems.length)
+  }, [lightboxOpen, currentIndex, allItems, base])
 
   return (
     <div className="space-y-6">
-      {/* Images Section */}
-      <motion.div 
-        className="card" 
-        initial={{ opacity: 0 }} 
-        animate={{ opacity: 1 }}
-      >
+      {/* Images */}
+      <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <h2>Photos</h2>
         <div className="gallery-grid">
-          {images.map((image, idx) => (
+          {images.map((i, idx) => (
             <motion.div
-              key={image.id}
+              key={i.id}
               className="photo"
               whileHover={{ scale: 1.03 }}
               onClick={() => openLightbox(idx)}
             >
               <img
-                src={`${base}/api/files/${image.id}?thumb=1`}
-                alt={image.originalname || 'Gallery photo'}
+                src={`${base}/api/files/${i.id}?thumb=1`}
+                alt={i.originalname || 'gallery photo'}
                 className="cursor-pointer"
                 loading="lazy"
                 decoding="async"
@@ -185,24 +155,20 @@ export default function Gallery() {
         </div>
       </motion.div>
 
-      {/* Videos Section */}
-      <motion.div 
-        className="card" 
-        initial={{ opacity: 0 }} 
-        animate={{ opacity: 1 }}
-      >
+      {/* Videos */}
+      <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <h2>Videos</h2>
         <div className="gallery-grid">
-          {videos.map((video, idx) => (
+          {videos.map((v, idx) => (
             <motion.div
-              key={video.id}
+              key={v.id}
               className="photo relative"
               whileHover={{ scale: 1.03 }}
               onClick={() => openLightbox(images.length + idx)}
             >
               <img
-                src={`${base}/api/files/${video.id}?thumb=1`}
-                alt={video.originalname || 'Gallery video'}
+                src={`${base}/api/files/${v.id}?thumb=1`}
+                alt={v.originalname || 'gallery video'}
                 className="cursor-pointer"
                 loading="lazy"
                 decoding="async"
@@ -225,11 +191,7 @@ export default function Gallery() {
             exit={{ opacity: 0 }}
             onClick={closeLightbox}
           >
-            <button 
-              className="lightbox-close" 
-              onClick={closeLightbox}
-              aria-label="Close lightbox"
-            >
+            <button className="lightbox-close" onClick={closeLightbox}>
               ×
             </button>
 
@@ -244,12 +206,12 @@ export default function Gallery() {
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.15}
               onDragEnd={(e, { offset }) => {
-                if (offset.x < -100) nextItem();
-                else if (offset.x > 100) prevItem();
+                if (offset.x < -100) nextItem()
+                else if (offset.x > 100) prevItem()
               }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on content
             >
-              {/* Loading Spinner */}
+              {/* Spinner */}
               {loading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
                   <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -259,7 +221,7 @@ export default function Gallery() {
               {allItems[currentIndex]?.type === 'image' ? (
                 <img
                   src={`${base}/api/files/${allItems[currentIndex].id}`}
-                  alt="Lightbox preview"
+                  alt="preview"
                   className={`lightbox-media ${isZoomed ? 'lightbox-media-zoomed' : ''}`}
                   loading="eager"
                   decoding="sync"
@@ -278,7 +240,7 @@ export default function Gallery() {
                   className="lightbox-media lightbox-video"
                   onLoadedData={handleVideoPlay}
                   onPlay={() => setLoading(false)}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on video
                 />
               )}
             </motion.div>
@@ -289,14 +251,12 @@ export default function Gallery() {
                 <button 
                   className="lightbox-nav lightbox-nav-left" 
                   onClick={(e) => { e.stopPropagation(); prevItem(); }}
-                  aria-label="Previous item"
                 >
                   ‹
                 </button>
                 <button 
                   className="lightbox-nav lightbox-nav-right" 
                   onClick={(e) => { e.stopPropagation(); nextItem(); }}
-                  aria-label="Next item"
                 >
                   ›
                 </button>
@@ -306,5 +266,5 @@ export default function Gallery() {
         )}
       </AnimatePresence>
     </div>
-  );
+  )
 }
