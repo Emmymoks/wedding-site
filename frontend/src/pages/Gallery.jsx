@@ -62,9 +62,10 @@ export default function Gallery() {
               onClick={() => openLightbox(idx)}
             >
               <img
-                src={`${base}/api/files/${i.id}`}
+                src={`${base}/api/files/${i.id}?thumb=1`}  // thumbnail version
                 alt="gallery item"
                 className="cursor-pointer"
+                loading="lazy"
               />
             </motion.div>
           ))}
@@ -82,8 +83,9 @@ export default function Gallery() {
               onClick={() => openLightbox(images.length + idx)}
             >
               <video
-                src={`${base}/api/files/${v.id}`}
+                src={`${base}/api/files/${v.id}?thumb=1`} // low-res/thumbnail poster
                 className="cursor-pointer"
+                preload="none"
               />
             </motion.div>
           ))}
@@ -125,13 +127,13 @@ export default function Gallery() {
             >
               {allItems[currentIndex]?.type === 'image' ? (
                 <img
-                  src={`${base}/api/files/${allItems[currentIndex].id}`}
+                  src={`${base}/api/files/${allItems[currentIndex].id}`} // full-res only here
                   alt="preview"
                   className="lightbox-media"
                 />
               ) : (
                 <video
-                  src={`${base}/api/files/${allItems[currentIndex].id}`}
+                  src={`${base}/api/files/${allItems[currentIndex].id}`} // full-res video here
                   controls
                   autoPlay
                   className="lightbox-media"
