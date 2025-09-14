@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -9,9 +9,7 @@ export default function Gallery() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [allItems, setAllItems] = useState([])
   const [loading, setLoading] = useState(false)
-  const [muted, setMuted] = useState(true) // 🔑 default mute for autoplay
 
-  const videoRef = useRef(null)
   const base = import.meta.env.VITE_BACKEND_URL
 
   useEffect(() => {
@@ -39,19 +37,16 @@ export default function Gallery() {
     setCurrentIndex(index)
     setLightboxOpen(true)
     setLoading(true)
-    setMuted(true) // reset mute each time
   }, [])
 
   const closeLightbox = useCallback(() => {
     setLightboxOpen(false)
-    setMuted(true)
   }, [])
 
   const nextItem = useCallback(() => {
     setCurrentIndex(prev => {
       const next = (prev + 1) % allItems.length
       setLoading(true)
-      setMuted(true)
       return next
     })
   }, [allItems])
@@ -60,7 +55,6 @@ export default function Gallery() {
     setCurrentIndex(prev => {
       const prevIdx = (prev - 1 + allItems.length) % allItems.length
       setLoading(true)
-      setMuted(true)
       return prevIdx
     })
   }, [allItems])
@@ -76,6 +70,21 @@ export default function Gallery() {
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [lightboxOpen, nextItem, prevItem, closeLightbox])
+
+  // 🔑 Preload next/previous images for smoother UX
+  useEffect(() => {
+    if (!lightboxOpen || allItems.length === 0) return
+    const preload = index => {
+      const item = allItems[index]
+      if (!item) return
+      if (item.type === 'image') {
+        const img = new Image()
+        img.src = `${base}/api/files/${item.id}`
+      }
+    }
+    preload((currentIndex + 1) % allItems.length)
+    preload((currentIndex - 1 + allItems.length) % allItems.length)
+  }, [lightboxOpen, currentIndex, allItems, base])
 
   return (
     <div className="space-y-6">
@@ -173,32 +182,17 @@ export default function Gallery() {
                   onLoad={() => setLoading(false)}
                 />
               ) : (
-                <div className="relative">
-                  <video
-                    ref={videoRef}
-                    src={`${base}/api/files/${allItems[currentIndex].id}`}
-                    controls
-                    autoPlay
-                    playsInline
-                    muted={muted}
-                    preload="auto"
-                    className="lightbox-media"
-                    style={{ maxHeight: '90vh', maxWidth: '100%' }}
-                    onLoadedData={() => setLoading(false)}
-                  />
-                  {/* Mute/Unmute toggle */}
-                  <button
-                    className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-2 rounded"
-                    onClick={() => {
-                      setMuted(m => !m)
-                      if (videoRef.current) {
-                        videoRef.current.muted = !videoRef.current.muted
-                      }
-                    }}
-                  >
-                    {muted ? '🔇 Unmute' : '🔊 Mute'}
-                  </button>
-                </div>
+                <video
+                  src={`${base}/api/files/${allItems[currentIndex].id}`}
+                  controls
+                  autoPlay
+                  playsInline
+                  muted
+                  preload="auto"
+                  className="lightbox-media"
+                  style={{ maxHeight: '90vh', maxWidth: '100%' }}
+                  onLoadedData={() => setLoading(false)}
+                />
               )}
             </motion.div>
           </motion.div>
