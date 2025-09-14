@@ -33,7 +33,7 @@ export default function AdminDashboard() {
         headers: { Authorization: 'Bearer ' + token }
       })
 
-      // For each file, fetch blob if not approved (needs auth) or approved (public is fine too)
+      // For each file, fetch blob for preview
       const withPreviews = await Promise.all(
         f.data.map(async file => {
           try {
@@ -234,16 +234,10 @@ export default function AdminDashboard() {
         animate={{ opacity: 1, y: 0 }}
       >
         <h3 style={{ marginBottom: 16 }}>Uploads (Approve / Delete)</h3>
-        <div
-          className="gallery-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-            gap: 20
-          }}
-        >
+        <div className="gallery-grid">
           {files.map(f => {
             const type = f.mimetype || f.contentType || ''
+            const approved = f.metadata?.approved
             return (
               <motion.div
                 key={f._id}
@@ -296,7 +290,7 @@ export default function AdminDashboard() {
                 <div className="photo-meta" style={{ padding: 14 }}>
                   <span style={{ display: 'block', marginBottom: 10 }}>
                     <strong>{f.metadata?.uploader || 'Anonymous'}</strong> —{' '}
-                    {f.metadata?.approved ? '✅ Approved' : '❌ Pending'}
+                    {approved ? '✅ Approved' : '❌ Pending'}
                   </span>
                   <span
                     style={{
@@ -309,13 +303,15 @@ export default function AdminDashboard() {
                     {f.filename}
                   </span>
                   <div className="row gap" style={{ gap: 12 }}>
-                    <button
-                      className="btn btn-primary"
-                      style={{ padding: '8px 16px' }}
-                      onClick={() => approveFile(f._id)}
-                    >
-                      Approve
-                    </button>
+                    {!approved && (
+                      <button
+                        className="btn btn-primary"
+                        style={{ padding: '8px 16px' }}
+                        onClick={() => approveFile(f._id)}
+                      >
+                        Approve
+                      </button>
+                    )}
                     <button
                       className="btn btn-secondary"
                       style={{ padding: '8px 16px' }}
