@@ -10,6 +10,7 @@ export default function Gallery() {
   const [allItems, setAllItems] = useState([])
   const [loading, setLoading] = useState(false)
   const [isZoomed, setIsZoomed] = useState(false)
+  const [view, setView] = useState("photos") // NEW: toggle state
   const videoRef = useRef(null)
 
   const base = import.meta.env.VITE_BACKEND_URL
@@ -129,54 +130,78 @@ export default function Gallery() {
       </div>
 
       <main className="space-y-6 relative z-10">
-        {/* Images */}
-        <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <h2>Photos</h2>
-          <div className="gallery-grid">
-            {images.map((i, idx) => (
-              <motion.div
-                key={i.id}
-                className="photo"
-                whileHover={{ scale: 1.03 }}
-                onClick={() => openLightbox(idx)}
-              >
-                <img
-                  src={`${base}/api/files/${i.id}?thumb=1`}
-                  alt={i.originalname || 'gallery photo'}
-                  className="cursor-pointer"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+        {/* Toggle Buttons */}
+        <div className="flex justify-center gap-4 mb-6">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.05 }}
+            onClick={() => setView("photos")}
+            className={`btn ${view === "photos" ? "btn-primary" : "btn-secondary"}`}
+          >
+            📸 Photos
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.05 }}
+            onClick={() => setView("videos")}
+            className={`btn ${view === "videos" ? "btn-primary" : "btn-secondary"}`}
+          >
+            🎥 Videos
+          </motion.button>
+        </div>
+
+        {/* Photos */}
+        {view === "photos" && (
+          <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <h2>Photos</h2>
+            <div className="gallery-grid">
+              {images.map((i, idx) => (
+                <motion.div
+                  key={i.id}
+                  className="photo"
+                  whileHover={{ scale: 1.03 }}
+                  onClick={() => openLightbox(idx)}
+                >
+                  <img
+                    src={`${base}/api/files/${i.id}?thumb=1`}
+                    alt={i.originalname || 'gallery photo'}
+                    className="cursor-pointer"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Videos */}
-        <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <h2>Videos</h2>
-          <div className="gallery-grid">
-            {videos.map((v, idx) => (
-              <motion.div
-                key={v.id}
-                className="photo relative"
-                whileHover={{ scale: 1.03 }}
-                onClick={() => openLightbox(images.length + idx)}
-              >
-                <img
-                  src={`${base}/api/files/${v.id}?thumb=1`}
-                  alt={v.originalname || 'gallery video'}
-                  className="cursor-pointer"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-3xl font-bold">
-                  ▶
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+        {view === "videos" && (
+          <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <h2>Videos</h2>
+            <div className="gallery-grid">
+              {videos.map((v, idx) => (
+                <motion.div
+                  key={v.id}
+                  className="photo relative"
+                  whileHover={{ scale: 1.03 }}
+                  onClick={() => openLightbox(images.length + idx)}
+                >
+                  <img
+                    src={`${base}/api/files/${v.id}?thumb=1`}
+                    alt={v.originalname || 'gallery video'}
+                    className="cursor-pointer"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-3xl font-bold">
+                    ▶
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Lightbox */}
         <AnimatePresence>
