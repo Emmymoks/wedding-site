@@ -46,7 +46,10 @@ export default function Gallery() {
   const closeLightbox = useCallback(() => {
     setLightboxOpen(false)
     setIsZoomed(false)
-    if (videoRef.current) videoRef.current.pause()
+    if (videoRef.current) {
+      videoRef.current.pause()
+      videoRef.current.currentTime = 0
+    }
   }, [])
 
   const nextItem = useCallback(() => {
@@ -316,6 +319,7 @@ export default function Gallery() {
                     src={`${base}/api/files/${allItems[currentIndex].id}`}
                     controls
                     autoPlay
+                    muted
                     playsInline
                     preload="auto"
                     loop
