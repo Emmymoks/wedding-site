@@ -13,17 +13,63 @@
   --max-width: 1200px;
 }
 
-/* Reset + Base */
+/* =======================
+   Base Styles
+======================= */
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
+
 body {
   margin: 0;
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  background: linear-gradient(180deg, #fff 0%, var(--bg) 100%);
-  color: #222;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #faf9f6;
+  color: #333;
+  overflow-x: hidden;
+  position: relative;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;
+}
+
+/* General Utilities */
+.h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 0;
+  color: var(--accent-1);
+}
+
+.lead {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin-top: 0.5rem;
+  color: #444;
+}
+
+.btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: transform 0.25s ease, background-color 0.3s ease;
+  border: none;
+  font-weight: 700;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+  color: white;
+  box-shadow: 0 10px 30px rgba(127, 86, 218, 0.12);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--accent-1);
+  border: 1px solid rgba(127, 86, 218, 0.12);
+}
+
+.btn:hover {
+  transform: scale(1.05);
 }
 
 /* ---------------- FLOATING WEDDING SHAPES ---------------- */
@@ -37,7 +83,7 @@ body {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
   overflow: hidden;
 }
 
@@ -158,36 +204,65 @@ main {
   width: calc(100% - 48px);
 }
 
-/* Card */
+/* =======================
+   Cards & Rows
+======================= */
 .card {
-  background: var(--card);
-  border-radius: var(--radius-md);
-  padding: 28px;
-  box-shadow: var(--shadow-1);
+  background: white;
+  padding: 1.5rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  position: relative;
+  z-index: 1;
   margin-bottom: 28px;
   transition: transform .18s ease, box-shadow .18s ease;
 }
-.card:hover { transform: translateY(-6px); box-shadow: var(--shadow-2); }
+.card:hover { 
+  transform: translateY(-6px); 
+  box-shadow: var(--shadow-2); 
+}
 
-/* Hero */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* =======================
+   Hero Section
+======================= */
 .hero {
   display: flex;
-  gap: 26px;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  position: relative;
+  z-index: 1;
   padding: 28px;
   border-radius: 22px;
   background: linear-gradient(135deg, rgba(255, 250, 246, 0.9), rgba(249, 245, 255, 0.8));
   overflow: hidden;
 }
-.hero-left { flex: 1; }
-.hero-right { width: 420px; display: flex; justify-content: center; }
+
+.hero-left {
+  flex: 1;
+  min-width: 300px;
+}
+
+.hero-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 .hero-img-wrapper {
   width: 100%;
-  max-width: 420px;
-  border-radius: var(--radius-lg);
+  max-width: 500px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: var(--shadow-2);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
 }
 
 .hero-img {
@@ -196,68 +271,49 @@ main {
   max-height: 500px;
   object-fit: cover;
   display: block;
-  border-radius: var(--radius-lg);
+  transition: transform 0.4s ease;
+  border-radius: 20px;
 }
 
-/* Typography */
-.h1 {
-  font-size: 34px;
-  line-height: 1.1;
-  margin: 0 0 12px;
-  color: var(--accent-1);
-  font-weight: 800;
-}
-.lead {
-  color: var(--muted);
-  font-size: 16px;
-  margin-bottom: 16px;
+.hero-img:hover {
+  transform: scale(1.03);
 }
 
-/* Buttons */
-.cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
-.btn {
-  border: 0;
-  padding: 10px 16px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform .18s ease, box-shadow .18s ease;
+.cta-row { 
+  display: flex; 
+  gap: 12px; 
+  flex-wrap: wrap; 
+  margin-top: 1.5rem;
 }
-.btn-primary {
-  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
-  color: #fff;
-  box-shadow: 0 10px 30px rgba(127, 86, 218, 0.12);
-}
-.btn-secondary {
-  background: transparent;
-  color: var(--accent-1);
-  border: 1px solid rgba(127, 86, 218, 0.12);
-}
-.btn:hover { transform: translateY(-4px); }
 
-/* Gallery Preview */
+/* =======================
+   Gallery Preview
+======================= */
 .preview-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
+  margin-top: 1.5rem;
 }
-.preview-item {
-  width: 100%; height: 92px;
+
+.preview-link {
+  display: block;
+  border-radius: 14px;
   overflow: hidden;
-  border-radius: 12px;
-  background: #f6f6f8;
-  display: flex; align-items: center; justify-content: center;
-}
-.preview-item img, .preview-item video {
-  width: 100%; height: 100%; object-fit: cover;
+  box-shadow: 0 5px 16px rgba(0,0,0,0.15);
 }
 
 .preview-img {
   width: 100%;
   height: 180px;
   object-fit: cover;
-  border-radius: var(--radius-md);
+  transition: transform 0.35s ease;
+  border-radius: 14px;
   display: block;
+}
+
+.preview-link:hover .preview-img {
+  transform: scale(1.05);
 }
 
 /* Footer */
@@ -411,27 +467,40 @@ main {
   padding: 6px 12px;
 }
 
-/* ---------------- GALLERY ---------------- */
+/* =======================
+   Gallery Grid
+======================= */
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
   margin-top: 24px;
 }
-.gallery-grid .photo {
-  border-radius: var(--radius-md);
+
+.photo {
+  position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-1);
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  cursor: pointer;
   background: #fff;
   display: flex;
   flex-direction: column;
 }
-.gallery-grid .photo img,
-.gallery-grid .photo video {
+
+.photo img,
+.photo video {
   width: 100%;
   height: 200px;
   object-fit: cover;
+  transition: transform 0.35s ease;
 }
+
+.photo:hover img,
+.photo:hover video {
+  transform: scale(1.06);
+}
+
 .photo-meta {
   padding: 14px;
   font-size: 14px;
@@ -439,105 +508,88 @@ main {
 }
 .photo-meta .row { margin-top: 10px; }
 
-/* ---------------- RESPONSIVE ---------------- */
-@media (max-width: 900px) {
-  .hero { flex-direction: column; padding: 18px; }
-  .hero-right { width: 100%; }
-  .preview-grid { grid-template-columns: repeat(2, 1fr); }
-  .nav { display: none; }
-  .mobile-toggle { display: flex; }
-}
-@media (max-width: 600px) {
-  .gallery-grid { grid-template-columns: 1fr; }
-  .upload-card { margin: 30px 16px; padding: 28px 20px; }
-}
-
-/* ---------------- LIGHTBOX ---------------- */
+/* =======================
+   Lightbox Overlay
+======================= */
 .lightbox-overlay {
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.9);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 15, 15, 0.95);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2000;
+  backdrop-filter: blur(8px);
   padding: 20px;
   cursor: default;
 }
 
 .lightbox-content {
-  max-width: 95%;
-  max-height: 90vh;
+  position: relative;
+  max-width: 90%;
+  max-height: 85%;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: default;
 }
 
 .lightbox-media {
   max-width: 100%;
-  max-height: 90vh;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-2);
+  max-height: 100%;
   object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
   transition: transform 0.3s ease;
-  cursor: default;
-}
-
-/* Zoom only for images */
-.lightbox-media:not(.lightbox-video) {
   cursor: zoom-in;
 }
 
 .lightbox-media-zoomed {
-  transform: scale(1.8);
+  transform: scale(1.3);
   cursor: zoom-out;
-}
-
-.lightbox-video {
-  cursor: default;
 }
 
 .lightbox-close {
   position: absolute;
-  top: 24px;
-  right: 32px;
-  font-size: 40px;
-  font-weight: bold;
+  top: 20px;
+  right: 30px;
+  font-size: 2rem;
   color: white;
   background: transparent;
   border: none;
   cursor: pointer;
+  z-index: 2100;
   transition: transform 0.2s ease;
-  z-index: 1100;
 }
 
 .lightbox-close:hover {
   transform: scale(1.2);
 }
 
-/* Lightbox Navigation Buttons */
 .lightbox-nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.5);
+  font-size: 3rem;
   color: white;
+  background: rgba(0,0,0,0.4);
   border: none;
+  cursor: pointer;
+  padding: 0.3rem 0.6rem;
   border-radius: 50%;
+  z-index: 2100;
+  transition: background 0.3s ease;
   width: 50px;
   height: 50px;
-  font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  z-index: 1002;
-  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .lightbox-nav:hover {
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0,0,0,0.65);
   transform: translateY(-50%) scale(1.1);
 }
 
@@ -549,7 +601,46 @@ main {
   right: 20px;
 }
 
-/* Mobile Responsive Adjustments */
+/* Loading spinner for lightbox */
+.lightbox-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  z-index: 1001;
+}
+
+@keyframes spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* =======================
+   Responsive Fixes
+======================= */
+@media (max-width: 900px) {
+  .hero { 
+    flex-direction: column; 
+    text-align: center;
+    padding: 18px; 
+  }
+  .hero-left, .hero-right { 
+    flex: unset;
+    width: 100%; 
+  }
+  .preview-grid { grid-template-columns: repeat(2, 1fr); }
+  .nav { display: none; }
+  .mobile-toggle { display: flex; }
+  .lightbox-nav {
+    font-size: 2rem;
+  }
+}
+
 @media (max-width: 768px) {
   .lightbox-nav {
     width: 40px;
@@ -585,29 +676,15 @@ main {
   }
 }
 
+@media (max-width: 600px) {
+  .gallery-grid { grid-template-columns: 1fr; }
+  .upload-card { margin: 30px 16px; padding: 28px 20px; }
+}
+
 /* Video-specific styles for mobile */
 .lightbox-media video {
   width: auto;
   max-width: 100%;
   height: auto;
   max-height: 85vh;
-}
-
-/* Loading spinner for lightbox */
-.lightbox-loading {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
-  z-index: 1001;
-}
-
-@keyframes spin {
-  to { transform: translate(-50%, -50%) rotate(360deg); }
 }
