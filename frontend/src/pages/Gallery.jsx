@@ -131,7 +131,7 @@ export default function Gallery() {
 
       <main className="space-y-6 relative z-10">
         {/* Toggle Buttons */}
-        <div className="flex justify-center gap-4 mb-16">
+        <div className="flex justify-center gap-4 mb-20">
           <motion.button
             whileTap={{ scale: 0.95 }}
             whileHover={{ scale: 1.05 }}
@@ -162,7 +162,7 @@ export default function Gallery() {
         {view === "all" && (
           <>
             {/* Photos */}
-            <motion.div className="card mt-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div className="card mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <h2>Photos</h2>
               <div className="gallery-grid">
                 {images.map((i, idx) => (
@@ -214,7 +214,7 @@ export default function Gallery() {
 
         {/* Photos only */}
         {view === "photos" && (
-          <motion.div className="card mt-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <motion.div className="card mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <h2>Photos</h2>
             <div className="gallery-grid">
               {images.map((i, idx) => (
@@ -239,7 +239,7 @@ export default function Gallery() {
 
         {/* Videos only */}
         {view === "videos" && (
-          <motion.div className="card mt-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <motion.div className="card mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <h2>Videos</h2>
             <div className="gallery-grid">
               {videos.map((v, idx) => (
