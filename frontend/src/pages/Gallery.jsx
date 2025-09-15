@@ -10,7 +10,7 @@ export default function Gallery() {
   const [allItems, setAllItems] = useState([])
   const [loading, setLoading] = useState(false)
   const [isZoomed, setIsZoomed] = useState(false)
-  const [view, setView] = useState("all") // default: show everything
+  const [view, setView] = useState("all")
   const videoRef = useRef(null)
 
   const base = import.meta.env.VITE_BACKEND_URL
@@ -131,7 +131,7 @@ export default function Gallery() {
 
       <main className="space-y-6 relative z-10">
         {/* Toggle Buttons */}
-        <div className="flex justify-center gap-4 mb-12">
+        <div className="flex justify-center gap-4 mb-16">
           <motion.button
             whileTap={{ scale: 0.95 }}
             whileHover={{ scale: 1.05 }}
@@ -158,11 +158,11 @@ export default function Gallery() {
           </motion.button>
         </div>
 
-        {/* All (Separated Photos + Videos) */}
+        {/* All */}
         {view === "all" && (
           <>
             {/* Photos */}
-            <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div className="card mt-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <h2>Photos</h2>
               <div className="gallery-grid">
                 {images.map((i, idx) => (
@@ -185,7 +185,7 @@ export default function Gallery() {
             </motion.div>
 
             {/* Videos */}
-            <motion.div className="card mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div className="card mt-16" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <h2>Videos</h2>
               <div className="gallery-grid">
                 {videos.map((v, idx) => (
@@ -212,9 +212,9 @@ export default function Gallery() {
           </>
         )}
 
-        {/* Photos */}
+        {/* Photos only */}
         {view === "photos" && (
-          <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <motion.div className="card mt-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <h2>Photos</h2>
             <div className="gallery-grid">
               {images.map((i, idx) => (
@@ -237,9 +237,9 @@ export default function Gallery() {
           </motion.div>
         )}
 
-        {/* Videos */}
+        {/* Videos only */}
         {view === "videos" && (
-          <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <motion.div className="card mt-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <h2>Videos</h2>
             <div className="gallery-grid">
               {videos.map((v, idx) => (
