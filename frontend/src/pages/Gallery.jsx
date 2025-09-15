@@ -10,7 +10,7 @@ export default function Gallery() {
   const [allItems, setAllItems] = useState([])
   const [loading, setLoading] = useState(false)
   const [isZoomed, setIsZoomed] = useState(false)
-  const [view, setView] = useState("photos") // NEW: toggle state
+  const [view, setView] = useState("all") // default: show everything
   const videoRef = useRef(null)
 
   const base = import.meta.env.VITE_BACKEND_URL
@@ -131,7 +131,15 @@ export default function Gallery() {
 
       <main className="space-y-6 relative z-10">
         {/* Toggle Buttons */}
-        <div className="flex justify-center gap-4 mb-6">
+        <div className="flex justify-center gap-4 mb-10">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.05 }}
+            onClick={() => setView("all")}
+            className={`btn ${view === "all" ? "btn-primary" : "btn-secondary"}`}
+          >
+            🌟 All
+          </motion.button>
           <motion.button
             whileTap={{ scale: 0.95 }}
             whileHover={{ scale: 1.05 }}
@@ -149,6 +157,46 @@ export default function Gallery() {
             🎥 Videos
           </motion.button>
         </div>
+
+        {/* All (Photos + Videos) */}
+        {view === "all" && (
+          <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <h2>All Memories</h2>
+            <div className="gallery-grid">
+              {[...images, ...videos].map((item, idx) => (
+                <motion.div
+                  key={item.id}
+                  className="photo relative"
+                  whileHover={{ scale: 1.03 }}
+                  onClick={() => openLightbox(idx)}
+                >
+                  {item.mimetype?.startsWith("image") ? (
+                    <img
+                      src={`${base}/api/files/${item.id}?thumb=1`}
+                      alt={item.originalname || 'gallery item'}
+                      className="cursor-pointer"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <>
+                      <img
+                        src={`${base}/api/files/${item.id}?thumb=1`}
+                        alt={item.originalname || 'gallery video'}
+                        className="cursor-pointer"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-3xl font-bold">
+                        ▶
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Photos */}
         {view === "photos" && (
@@ -255,6 +303,7 @@ export default function Gallery() {
                     autoPlay
                     playsInline
                     preload="auto"
+                    loop
                     className="lightbox-media lightbox-video"
                     onLoadedData={handleVideoPlay}
                     onPlay={() => setLoading(false)}
