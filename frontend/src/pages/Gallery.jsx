@@ -118,131 +118,142 @@ export default function Gallery() {
   }, [lightboxOpen, currentIndex, allItems, base])
 
   return (
-    <div className="space-y-6">
-      {/* Images */}
-      <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <h2>Photos</h2>
-        <div className="gallery-grid">
-          {images.map((i, idx) => (
-            <motion.div
-              key={i.id}
-              className="photo"
-              whileHover={{ scale: 1.03 }}
-              onClick={() => openLightbox(idx)}
-            >
-              <img
-                src={`${base}/api/files/${i.id}?thumb=1`}
-                alt={i.originalname || 'gallery photo'}
-                className="cursor-pointer"
-                loading="lazy"
-                decoding="async"
-              />
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
+    <div className="page-wrapper">
+      {/* Floating Background Shapes */}
+      <div className="floating-shapes">
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
+      </div>
 
-      {/* Videos */}
-      <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <h2>Videos</h2>
-        <div className="gallery-grid">
-          {videos.map((v, idx) => (
-            <motion.div
-              key={v.id}
-              className="photo relative"
-              whileHover={{ scale: 1.03 }}
-              onClick={() => openLightbox(images.length + idx)}
-            >
-              <img
-                src={`${base}/api/files/${v.id}?thumb=1`}
-                alt={v.originalname || 'gallery video'}
-                className="cursor-pointer"
-                loading="lazy"
-                decoding="async"
-              />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-3xl font-bold">
-                ▶
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Lightbox */}
-      <AnimatePresence>
-        {lightboxOpen && (
-          <motion.div
-            className="lightbox-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={closeLightbox}
-          >
-            <button className="lightbox-close" onClick={closeLightbox}>×</button>
-
-            <motion.div
-              key={currentIndex}
-              className="lightbox-content relative"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.15}
-              onDragEnd={(e, { offset }) => {
-                if (offset.x < -100) nextItem()
-                else if (offset.x > 100) prevItem()
-              }}
-              onClick={e => e.stopPropagation()}
-            >
-              {loading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
-                  <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              )}
-
-              {allItems[currentIndex]?.type === 'image' ? (
+      <main className="space-y-6 relative z-10">
+        {/* Images */}
+        <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <h2>Photos</h2>
+          <div className="gallery-grid">
+            {images.map((i, idx) => (
+              <motion.div
+                key={i.id}
+                className="photo"
+                whileHover={{ scale: 1.03 }}
+                onClick={() => openLightbox(idx)}
+              >
                 <img
-                  src={`${base}/api/files/${allItems[currentIndex].id}`}
-                  alt="preview"
-                  className={`lightbox-media ${isZoomed ? 'lightbox-media-zoomed' : ''}`}
-                  loading="eager"
-                  decoding="sync"
-                  onLoad={() => setLoading(false)}
-                  onClick={toggleZoom}
+                  src={`${base}/api/files/${i.id}?thumb=1`}
+                  alt={i.originalname || 'gallery photo'}
+                  className="cursor-pointer"
+                  loading="lazy"
+                  decoding="async"
                 />
-              ) : (
-                <video
-                  ref={videoRef}
-                  src={`${base}/api/files/${allItems[currentIndex].id}`}
-                  controls
-                  autoPlay
-                  playsInline
-                  preload="auto"
-                  className="lightbox-media lightbox-video"
-                  onLoadedData={handleVideoPlay}
-                  onPlay={() => setLoading(false)}
-                  onClick={e => e.stopPropagation()}
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Videos */}
+        <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <h2>Videos</h2>
+          <div className="gallery-grid">
+            {videos.map((v, idx) => (
+              <motion.div
+                key={v.id}
+                className="photo relative"
+                whileHover={{ scale: 1.03 }}
+                onClick={() => openLightbox(images.length + idx)}
+              >
+                <img
+                  src={`${base}/api/files/${v.id}?thumb=1`}
+                  alt={v.originalname || 'gallery video'}
+                  className="cursor-pointer"
+                  loading="lazy"
+                  decoding="async"
                 />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-3xl font-bold">
+                  ▶
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Lightbox */}
+        <AnimatePresence>
+          {lightboxOpen && (
+            <motion.div
+              className="lightbox-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeLightbox}
+            >
+              <button className="lightbox-close" onClick={closeLightbox}>×</button>
+
+              <motion.div
+                key={currentIndex}
+                className="lightbox-content relative"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.15}
+                onDragEnd={(e, { offset }) => {
+                  if (offset.x < -100) nextItem()
+                  else if (offset.x > 100) prevItem()
+                }}
+                onClick={e => e.stopPropagation()}
+              >
+                {loading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
+                    <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+
+                {allItems[currentIndex]?.type === 'image' ? (
+                  <img
+                    src={`${base}/api/files/${allItems[currentIndex].id}`}
+                    alt="preview"
+                    className={`lightbox-media ${isZoomed ? 'lightbox-media-zoomed' : ''}`}
+                    loading="eager"
+                    decoding="sync"
+                    onLoad={() => setLoading(false)}
+                    onClick={toggleZoom}
+                  />
+                ) : (
+                  <video
+                    ref={videoRef}
+                    src={`${base}/api/files/${allItems[currentIndex].id}`}
+                    controls
+                    autoPlay
+                    playsInline
+                    preload="auto"
+                    className="lightbox-media lightbox-video"
+                    onLoadedData={handleVideoPlay}
+                    onPlay={() => setLoading(false)}
+                    onClick={e => e.stopPropagation()}
+                  />
+                )}
+              </motion.div>
+
+              {allItems.length > 1 && (
+                <>
+                  <button
+                    className="lightbox-nav lightbox-nav-left"
+                    onClick={e => { e.stopPropagation(); prevItem() }}
+                  >‹</button>
+                  <button
+                    className="lightbox-nav lightbox-nav-right"
+                    onClick={e => { e.stopPropagation(); nextItem() }}
+                  >›</button>
+                </>
               )}
             </motion.div>
-
-            {allItems.length > 1 && (
-              <>
-                <button
-                  className="lightbox-nav lightbox-nav-left"
-                  onClick={e => { e.stopPropagation(); prevItem() }}
-                >‹</button>
-                <button
-                  className="lightbox-nav lightbox-nav-right"
-                  onClick={e => { e.stopPropagation(); nextItem() }}
-                >›</button>
-              </>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
+      </main>
     </div>
   )
 }
