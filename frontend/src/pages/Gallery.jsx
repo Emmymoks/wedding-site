@@ -45,10 +45,7 @@ export default function Gallery() {
   const closeLightbox = useCallback(() => {
     setLightboxOpen(false)
     setIsZoomed(false)
-    // Pause any playing video when closing lightbox
-    if (videoRef.current) {
-      videoRef.current.pause()
-    }
+    if (videoRef.current) videoRef.current.pause()
   }, [])
 
   const nextItem = useCallback(() => {
@@ -75,25 +72,19 @@ export default function Gallery() {
     }
   }, [currentIndex, allItems])
 
-  // Handle video play on mobile
   const handleVideoPlay = useCallback(() => {
     setLoading(false)
     if (videoRef.current) {
-      // On mobile, we need to explicitly play the video
+      videoRef.current.controls = true
       const playPromise = videoRef.current.play()
       if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.log("Auto-play was prevented:", error)
-          // Show controls if autoplay fails
-          if (videoRef.current) {
-            videoRef.current.controls = true
-          }
+        playPromise.catch(err => {
+          console.warn("Autoplay blocked, showing controls", err)
         })
       }
     }
   }, [])
 
-  // Keyboard navigation
   useEffect(() => {
     if (!lightboxOpen) return
     const handleKey = e => {
@@ -103,11 +94,8 @@ export default function Gallery() {
       if (e.key === ' ' && allItems[currentIndex]?.type === 'video') {
         e.preventDefault()
         if (videoRef.current) {
-          if (videoRef.current.paused) {
-            videoRef.current.play()
-          } else {
-            videoRef.current.pause()
-          }
+          if (videoRef.current.paused) videoRef.current.play()
+          else videoRef.current.pause()
         }
       }
     }
@@ -115,7 +103,6 @@ export default function Gallery() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [lightboxOpen, nextItem, prevItem, closeLightbox, currentIndex, allItems])
 
-  // Preload next/previous images for smoother UX
   useEffect(() => {
     if (!lightboxOpen || allItems.length === 0) return
     const preload = index => {
@@ -181,7 +168,7 @@ export default function Gallery() {
         </div>
       </motion.div>
 
-      {/* Lightbox Overlay */}
+      {/* Lightbox */}
       <AnimatePresence>
         {lightboxOpen && (
           <motion.div
@@ -191,9 +178,7 @@ export default function Gallery() {
             exit={{ opacity: 0 }}
             onClick={closeLightbox}
           >
-            <button className="lightbox-close" onClick={closeLightbox}>
-              ×
-            </button>
+            <button className="lightbox-close" onClick={closeLightbox}>×</button>
 
             <motion.div
               key={currentIndex}
@@ -209,9 +194,8 @@ export default function Gallery() {
                 if (offset.x < -100) nextItem()
                 else if (offset.x > 100) prevItem()
               }}
-              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on content
+              onClick={e => e.stopPropagation()}
             >
-              {/* Spinner */}
               {loading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
                   <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -235,31 +219,25 @@ export default function Gallery() {
                   controls
                   autoPlay
                   playsInline
-                  muted
                   preload="auto"
                   className="lightbox-media lightbox-video"
                   onLoadedData={handleVideoPlay}
                   onPlay={() => setLoading(false)}
-                  onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on video
+                  onClick={e => e.stopPropagation()}
                 />
               )}
             </motion.div>
 
-            {/* Navigation buttons */}
             {allItems.length > 1 && (
               <>
-                <button 
-                  className="lightbox-nav lightbox-nav-left" 
-                  onClick={(e) => { e.stopPropagation(); prevItem(); }}
-                >
-                  ‹
-                </button>
-                <button 
-                  className="lightbox-nav lightbox-nav-right" 
-                  onClick={(e) => { e.stopPropagation(); nextItem(); }}
-                >
-                  ›
-                </button>
+                <button
+                  className="lightbox-nav lightbox-nav-left"
+                  onClick={e => { e.stopPropagation(); prevItem() }}
+                >‹</button>
+                <button
+                  className="lightbox-nav lightbox-nav-right"
+                  onClick={e => { e.stopPropagation(); nextItem() }}
+                >›</button>
               </>
             )}
           </motion.div>
