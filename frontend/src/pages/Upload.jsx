@@ -48,73 +48,85 @@ export default function Upload() {
   }
 
   return (
-    <motion.div
-      className="card upload-card"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-    >
-      <h2 className="upload-title">📤 Upload Photos & Videos</h2>
-      <p className="upload-subtitle">
-        Share your favorite memories. Files will be reviewed before being added to the gallery.
-      </p>
+    <div className="page-wrapper">
+      {/* Floating Background Shapes */}
+      <div className="floating-shapes">
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
+      </div>
 
-      <form onSubmit={handleSubmit} className="upload-form">
-        {/* Uploader name */}
-        <input
-          className="input uploader-input"
-          placeholder="Your name (optional)"
-          value={uploader}
-          onChange={e => setUploader(e.target.value)}
-        />
+      {/* Upload Card */}
+      <motion.div
+        className="card upload-card relative z-10"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+      >
+        <h2 className="upload-title">📤 Upload Photos & Videos</h2>
+        <p className="upload-subtitle">
+          Share your favorite memories. Files will be reviewed before being added to the gallery.
+        </p>
 
-        {/* File drop/select */}
-        <div
-          className="file-drop-zone"
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-        >
-          <span className="file-instructions">
-            Drag & Drop or Click to Select Files
-          </span>
+        <form onSubmit={handleSubmit} className="upload-form">
+          {/* Uploader name */}
           <input
-            type="file"
-            multiple
-            accept="image/*,video/*"
-            onChange={handleFileSelect}
+            className="input uploader-input"
+            placeholder="Your name (optional)"
+            value={uploader}
+            onChange={e => setUploader(e.target.value)}
           />
-        </div>
 
-        {/* Show selected files */}
-        {files.length > 0 && (
-          <ul className="file-list">
-            {files.map((f, i) => (
-              <li key={i}>{f.name}</li>
-            ))}
-          </ul>
-        )}
+          {/* File drop/select */}
+          <div
+            className="file-drop-zone"
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+          >
+            <span className="file-instructions">
+              Drag & Drop or Click to Select Files
+            </span>
+            <input
+              type="file"
+              multiple
+              accept="image/*,video/*"
+              onChange={handleFileSelect}
+            />
+          </div>
 
-        {/* Submit button + status */}
-        <div className="upload-actions">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="btn btn-primary"
-            type="submit"
-          >
-            Upload
-          </motion.button>
-          <motion.span
-            key={status}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="status"
-          >
-            {status}
-          </motion.span>
-        </div>
-      </form>
-    </motion.div>
+          {/* Show selected files */}
+          {files.length > 0 && (
+            <ul className="file-list">
+              {files.map((f, i) => (
+                <li key={i}>{f.name}</li>
+              ))}
+            </ul>
+          )}
+
+          {/* Submit button + status */}
+          <div className="upload-actions">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="btn btn-primary"
+              type="submit"
+            >
+              Upload
+            </motion.button>
+            <motion.span
+              key={status}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="status"
+            >
+              {status}
+            </motion.span>
+          </div>
+        </form>
+      </motion.div>
+    </div>
   )
 }
