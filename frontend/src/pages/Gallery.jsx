@@ -57,6 +57,10 @@ export default function Gallery() {
       const next = (prev + 1) % allItems.length
       setLoading(true)
       setIsZoomed(false)
+      if (videoRef.current) {
+        videoRef.current.pause()
+        videoRef.current.currentTime = 0
+      }
       return next
     })
   }, [allItems])
@@ -66,6 +70,10 @@ export default function Gallery() {
       const prevIdx = (prev - 1 + allItems.length) % allItems.length
       setLoading(true)
       setIsZoomed(false)
+      if (videoRef.current) {
+        videoRef.current.pause()
+        videoRef.current.currentTime = 0
+      }
       return prevIdx
     })
   }, [allItems])
@@ -277,12 +285,23 @@ export default function Gallery() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closeLightbox}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                width: '100vw',
+                height: '100vh',
+                backgroundColor: 'rgba(0,0,0,0.9)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+              }}
             >
               <button className="lightbox-close" onClick={closeLightbox}>×</button>
 
               <motion.div
                 key={currentIndex}
-                className="lightbox-content relative"
+                className="lightbox-content"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
@@ -295,6 +314,13 @@ export default function Gallery() {
                   else if (offset.x > 100) prevItem()
                 }}
                 onClick={e => e.stopPropagation()}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 {loading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
@@ -307,7 +333,7 @@ export default function Gallery() {
                     src={`${base}/api/files/${allItems[currentIndex].id}`}
                     alt="preview"
                     className={`lightbox-media ${isZoomed ? 'lightbox-media-zoomed' : ''}`}
-                    style={{ maxWidth: '90vw', maxHeight: '80vh', objectFit: 'contain' }}
+                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                     loading="eager"
                     decoding="sync"
                     onLoad={() => setLoading(false)}
@@ -324,7 +350,7 @@ export default function Gallery() {
                     preload="auto"
                     loop
                     className="lightbox-media lightbox-video"
-                    style={{ maxWidth: '90vw', maxHeight: '80vh' }}
+                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                     onLoadedData={handleVideoPlay}
                     onPlay={() => setLoading(false)}
                     onClick={e => e.stopPropagation()}
