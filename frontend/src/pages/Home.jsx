@@ -64,8 +64,8 @@ export default function Home() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.6 }}
           >
-            Dear friends & family — we're so happy you're here. This page is a place to share memories: photos,
-            videos and messages. Use the upload page to send your moments — everything is approved by our admin
+            Dear friends & family, we're so happy you're here. This page is a place to share memories of Our Wedding: photos,
+            videos and messages. Use the upload page to send the moments you captured at our wedding everything is approved by our admin
             team before appearing in the gallery.
           </motion.p>
 
@@ -123,7 +123,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            A small preview — click to open the full gallery.
+            A small preview. click to open the full gallery.
           </motion.p>
         </div>
 
