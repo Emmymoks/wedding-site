@@ -294,30 +294,30 @@ main {
   transform: scale(1.03);
 }
 
-/* CTA & Controls spacing (applies to hero CTAs and gallery toggles) */
+/* CTA & Controls spacing (shared across all pages) */
 .cta-row {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 1.5rem;
-  margin-bottom: 2rem; /* spacing below buttons */
+  margin-bottom: 2.5rem; /* 🔥 consistent spacing below CTAs */
 }
 
-/* Dedicated toggle / controls row used on Gallery and other pages */
 .controls-row,
 .toggle-row,
-.gallery-controls {
+.gallery-controls,
+.upload-actions {
   display: flex;
   justify-content: center;
   gap: 12px;
-  margin-bottom: 3.5rem; /* 🔥 Increased spacing below buttons for breathing room */
+  margin-bottom: 3.5rem; /* 🔥 consistent spacing below buttons */
   align-items: center;
   flex-wrap: wrap;
 }
 
-/* Toggle small style adjustment */
 .controls-row .btn,
-.gallery-controls .btn {
+.gallery-controls .btn,
+.upload-actions .btn {
   border-radius: 999px;
   padding: 0.5rem 1rem;
   font-size: 0.95rem;
@@ -416,7 +416,7 @@ main {
   display: flex;
   flex-direction: column;
   gap: 22px;
-  margin-bottom: 1.8rem; /* Added spacing under form */
+  margin-bottom: 2.5rem;
 }
 .uploader-input {
   width: 100%;
@@ -447,23 +447,7 @@ main {
   background: #fdfbff;
 }
 .file-instructions { font-size: 14px; }
-.upload-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin-top: 10px;
-  margin-bottom: 2rem; /* Added spacing below upload buttons */
-}
-.upload-actions .btn {
-  min-width: 160px;
-  font-size: 15px;
-  padding: 12px 20px;
-}
-.status {
-  font-size: 14px;
-  color: var(--muted);
-}
+.status { font-size: 14px; color: var(--muted); }
 
 /* ---------------- ADMIN PAGE ---------------- */
 .auth-card {
@@ -513,7 +497,7 @@ main {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
-  margin-top: 0; /* handled by controls-row spacing */
+  margin-top: 0; /* spacing handled by controls-row */
 }
 
 .photo {
@@ -628,94 +612,33 @@ main {
 
 .lightbox-nav:hover {
   background: rgba(0,0,0,0.65);
-  transform: translateY(-50%) scale(1.05);
+  transform: scale(1.08);
 }
 
-.lightbox-nav-left { left: 20px; }
-.lightbox-nav-right { right: 20px; }
-
-/* Loading spinner for lightbox */
-.lightbox-loading {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
-  z-index: 1001;
-}
-
-@keyframes spin {
-  to { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-/* Video-specific styles for lightbox/mobile */
-.lightbox-media video {
-  width: auto;
-  max-width: 100%;
-  height: auto;
-  max-height: 85vh;
-}
+.lightbox-nav-left { left: 25px; }
+.lightbox-nav-right { right: 25px; }
 
 /* =======================
-   Responsive Fixes
+   Responsive Design
 ======================= */
-@media (max-width: 900px) {
-  .hero {
-    flex-direction: column;
-    text-align: center;
-    padding: 18px;
-  }
+@media (max-width: 768px) {
+  .header { padding: 14px 20px; }
+  .hero { flex-direction: column; text-align: center; padding: 20px; }
   .hero-left, .hero-right { width: 100%; }
-  .preview-grid { grid-template-columns: repeat(2, 1fr); }
+  .hero-img-wrapper { max-width: 100%; }
   .nav { display: none; }
   .mobile-toggle { display: flex; }
-  .lightbox-nav { font-size: 2rem; width: 44px; height: 44px; }
-  .controls-row { margin-bottom: 2.2rem; }
-  .cta-row { margin-bottom: 1.4rem; }
+  main { padding: 20px; }
+  .gallery-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .preview-grid { grid-template-columns: repeat(2, 1fr); }
+  .lightbox-nav { font-size: 1.8rem; width: 42px; height: 42px; }
+  .lightbox-close { font-size: 1.6rem; }
 }
 
-@media (max-width: 768px) {
-  .lightbox-nav {
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-  }
-  .lightbox-nav-left { left: 10px; }
-  .lightbox-nav-right { right: 10px; }
-  .lightbox-close { top: 15px; right: 20px; font-size: 32px; }
-  .lightbox-content { max-width: 98%; max-height: 85vh; }
-  .lightbox-media { max-height: 85vh; }
-  .lightbox-media-zoomed { transform: scale(1.35); }
-  .gallery-grid { gap: 14px; }
-}
-
-@media (max-width: 600px) {
-  .gallery-grid { grid-template-columns: 1fr; gap: 12px; }
-  .upload-card { margin: 30px 16px; padding: 28px 20px; }
-  .controls-row { margin-bottom: 1rem; }
-}
-
-/* small helpers for centering content inside .photo when overlay icons are used */
-.photo .overlay-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  color: white;
-  font-size: 2rem;
-}
-
-/* Small accessibility helper */
-.sr-only {
-  position: absolute !important;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px; overflow: hidden;
-  clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+@media (max-width: 480px) {
+  .h1 { font-size: 1.9rem; }
+  .lead { font-size: 1rem; }
+  .btn { font-size: 0.9rem; padding: 0.5rem 1rem; }
+  .gallery-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .lightbox-content { max-height: 75vh; }
 }
