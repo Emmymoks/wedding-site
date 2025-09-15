@@ -131,7 +131,7 @@ export default function Gallery() {
 
       <main className="space-y-6 relative z-10">
         {/* Toggle Buttons */}
-        <div className="flex justify-center gap-4 mb-10">
+        <div className="flex justify-center gap-4 mb-12">
           <motion.button
             whileTap={{ scale: 0.95 }}
             whileHover={{ scale: 1.05 }}
@@ -158,44 +158,58 @@ export default function Gallery() {
           </motion.button>
         </div>
 
-        {/* All (Photos + Videos) */}
+        {/* All (Separated Photos + Videos) */}
         {view === "all" && (
-          <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <h2>All Memories</h2>
-            <div className="gallery-grid">
-              {[...images, ...videos].map((item, idx) => (
-                <motion.div
-                  key={item.id}
-                  className="photo relative"
-                  whileHover={{ scale: 1.03 }}
-                  onClick={() => openLightbox(idx)}
-                >
-                  {item.mimetype?.startsWith("image") ? (
+          <>
+            {/* Photos */}
+            <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <h2>Photos</h2>
+              <div className="gallery-grid">
+                {images.map((i, idx) => (
+                  <motion.div
+                    key={i.id}
+                    className="photo"
+                    whileHover={{ scale: 1.03 }}
+                    onClick={() => openLightbox(idx)}
+                  >
                     <img
-                      src={`${base}/api/files/${item.id}?thumb=1`}
-                      alt={item.originalname || 'gallery item'}
+                      src={`${base}/api/files/${i.id}?thumb=1`}
+                      alt={i.originalname || 'gallery photo'}
                       className="cursor-pointer"
                       loading="lazy"
                       decoding="async"
                     />
-                  ) : (
-                    <>
-                      <img
-                        src={`${base}/api/files/${item.id}?thumb=1`}
-                        alt={item.originalname || 'gallery video'}
-                        className="cursor-pointer"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-3xl font-bold">
-                        ▶
-                      </div>
-                    </>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Videos */}
+            <motion.div className="card mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <h2>Videos</h2>
+              <div className="gallery-grid">
+                {videos.map((v, idx) => (
+                  <motion.div
+                    key={v.id}
+                    className="photo relative"
+                    whileHover={{ scale: 1.03 }}
+                    onClick={() => openLightbox(images.length + idx)}
+                  >
+                    <img
+                      src={`${base}/api/files/${v.id}?thumb=1`}
+                      alt={v.originalname || 'gallery video'}
+                      className="cursor-pointer"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-3xl font-bold">
+                      ▶
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </>
         )}
 
         {/* Photos */}
@@ -290,6 +304,7 @@ export default function Gallery() {
                     src={`${base}/api/files/${allItems[currentIndex].id}`}
                     alt="preview"
                     className={`lightbox-media ${isZoomed ? 'lightbox-media-zoomed' : ''}`}
+                    style={{ maxWidth: '90vw', maxHeight: '80vh', objectFit: 'contain' }}
                     loading="eager"
                     decoding="sync"
                     onLoad={() => setLoading(false)}
@@ -305,6 +320,7 @@ export default function Gallery() {
                     preload="auto"
                     loop
                     className="lightbox-media lightbox-video"
+                    style={{ maxWidth: '90vw', maxHeight: '80vh' }}
                     onLoadedData={handleVideoPlay}
                     onPlay={() => setLoading(false)}
                     onClick={e => e.stopPropagation()}
