@@ -131,7 +131,7 @@ export default function Gallery() {
 
       <main className="space-y-6 relative z-10">
         {/* Toggle Buttons */}
-        <div className="flex justify-center gap-4 mb-20">
+        <div className="gallery-controls">
           <motion.button
             whileTap={{ scale: 0.95 }}
             whileHover={{ scale: 1.05 }}
