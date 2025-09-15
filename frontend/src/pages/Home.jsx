@@ -92,7 +92,7 @@ export default function Home() {
         >
           <div className="hero-img-wrapper">
             <img
-              src="https://ik.imagekit.io/emmymoks/IMG-20250914-WA0019.jpg?updatedAt=1757861448258&tr=w-800,h-500,fo-auto"
+              src="https://ik.imagekit.io/emmymoks/IMG-20250914-WA0019.jpg?tr=w-800,h-500,fo-auto"
               alt="hero"
               className="hero-img"
               loading="lazy"
