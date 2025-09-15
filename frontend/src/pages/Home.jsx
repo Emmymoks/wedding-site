@@ -7,6 +7,7 @@ export default function Home() {
   const nav = useNavigate()
   const base = import.meta.env.VITE_BACKEND_URL
 
+  // try to load a small preview; if backend not available it's okay
   useEffect(() => {
     (async () => {
       try {
@@ -15,11 +16,12 @@ export default function Home() {
         const data = await res.json()
         setLatest(data.slice(0, 4))
       } catch (e) {
-        // silently ignore
+        // silently ignore — preview will be static
       }
     })()
   }, [base])
 
+  // static fallback thumbnails if API returns nothing
   const fallback = [
     'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0018.jpg?tr=w-300,h-200,fo-auto',
     'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0021.jpg?tr=w-300,h-200,fo-auto',
@@ -27,104 +29,81 @@ export default function Home() {
     'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0022.jpg?tr=w-300,h-200,fo-auto'
   ]
 
+  // use backend thumbnails if available, otherwise fallback
   const previewItems = latest.length
     ? latest.map(i => `${base}/api/files/${i.id}?thumb=1`)
     : fallback
 
   return (
-    <div className="homepage-wrapper space-y-6">
-      {/* Floating Shapes Background */}
-      <div className="floating-shapes">
-        <span className="shape heart">❤</span>
-        <span className="shape ring">💍</span>
-        <span className="shape heart">❤</span>
-        <span className="shape ring">💍</span>
-        <span className="shape heart">❤</span>
-      </div>
-
-      {/* Hero Section */}
+    <div className="space-y-6">
       <motion.section
         className="hero"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 0.6 }}
       >
         <div className="hero-left">
           <motion.h1
             className="h1"
-            initial={{ y: 40, opacity: 0 }}
+            initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
+            transition={{ delay: 0.1 }}
           >
             Welcome to our wedding
           </motion.h1>
           <motion.p
             className="lead"
-            initial={{ y: 40, opacity: 0 }}
+            initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
+            transition={{ delay: 0.2 }}
           >
-            Dear friends & family, we're so happy you're here. This page is a place to share memories of Our Wedding: photos,
-            videos and messages. Use the upload page to send the moments you captured at our wedding everything is approved by our admin
+            Dear friends & family, we're so happy you're here. This page is a place to share memories: photos,
+            videos and messages. Use the upload page to send moments you captured at our wedding. everything is approved by our admin
             team before appearing in the gallery.
           </motion.p>
 
-          <motion.div
-            className="cta-row"
-            initial={{ y: 40, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
-          >
+          <div className="cta-row">
             <button className="btn btn-primary" onClick={() => nav('/gallery')}>
               View Gallery
             </button>
             <button className="btn btn-secondary" onClick={() => nav('/upload')}>
               Upload Photos
             </button>
-          </motion.div>
+          </div>
         </div>
 
         <motion.div
           className="hero-right"
-          initial={{ x: 80, opacity: 0, scale: 0.95 }}
-          animate={{ x: 0, opacity: 1, scale: 1 }}
-          transition={{ delay: 0.8, duration: 0.7 }}
+          initial={{ scale: 0.98 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.25 }}
         >
-          <div className="hero-img-wrapper">
+          <div
+            style={{
+              width: '100%',
+              borderRadius: 16,
+              overflow: 'hidden',
+              boxShadow: 'var(--shadow-2)'
+            }}
+          >
             <img
-              src="https://ik.imagekit.io/emmymoks/IMG-20250914-WA0019.jpg?tr=w-800,h-500,fo-auto"
+              src="https://ik.imagekit.io/emmymoks/IMG-20250914-WA0019.jpg?updatedAt=1757861448258&tr=w-800,h-500,fo-auto"
               alt="hero"
-              className="hero-img"
+              style={{ width: '100%', height: 340, objectFit: 'cover' }}
               loading="lazy"
             />
           </div>
         </motion.div>
       </motion.section>
 
-      {/* Gallery Preview */}
-      <motion.div
-        className="card"
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.0, duration: 0.6 }}
-      >
+      <div className="card">
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
+          <div>
             <h3 style={{ margin: 0 }}>Latest from the gallery</h3>
-          </motion.div>
-          <motion.p
-            className="small"
-            style={{ marginTop: 6 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            A small preview. click to open the full gallery.
-          </motion.p>
+            <p className="small" style={{ marginTop: 6 }}>
+              A small preview — click to open the full gallery.
+            </p>
+          </div>
         </div>
 
         <div
@@ -143,18 +122,30 @@ export default function Home() {
                 e.preventDefault()
                 nav('/gallery')
               }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.96 }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.2 + idx * 0.15 }}
-              className="preview-link"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                display: 'block',
+                borderRadius: 14,
+                overflow: 'hidden',
+                boxShadow: 'var(--shadow-1)'
+              }}
             >
-              <img src={src} alt={`preview-${idx}`} className="preview-img" loading="lazy" />
+              <img
+                src={src}
+                alt={`preview-${idx}`}
+                style={{
+                  width: '100%',
+                  height: 200,
+                  objectFit: 'cover',
+                  display: 'block'
+                }}
+                loading="lazy"
+              />
             </motion.a>
           ))}
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }
