@@ -57,9 +57,12 @@ body {
   border-radius: 30px;
   cursor: pointer;
   font-size: 1rem;
-  transition: transform 0.25s ease, background-color 0.3s ease;
+  transition: transform 0.25s ease, background-color 0.3s ease, box-shadow 0.2s ease;
   border: none;
   font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .btn-primary {
@@ -75,8 +78,11 @@ body {
 }
 
 .btn:hover {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
+
+/* small utility */
+.text-muted { color: var(--muted); font-size: .95rem; }
 
 /* ---------------- FLOATING WEDDING SHAPES ---------------- */
 .floating-shapes {
@@ -92,6 +98,7 @@ body {
   font-size: 28px;
   opacity: 0.5;
   animation: floatUp 14s linear infinite;
+  will-change: transform, opacity;
 }
 
 .shape.heart { color: var(--accent-2); }
@@ -219,9 +226,9 @@ main {
   margin-bottom: 28px;
   transition: transform .18s ease, box-shadow .18s ease;
 }
-.card:hover { 
-  transform: translateY(-6px); 
-  box-shadow: var(--shadow-2); 
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-2);
 }
 
 .row {
@@ -281,11 +288,33 @@ main {
   transform: scale(1.03);
 }
 
-.cta-row { 
-  display: flex; 
-  gap: 12px; 
-  flex-wrap: wrap; 
+/* CTA & Controls spacing (applies to hero CTAs and gallery toggles) */
+.cta-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
   margin-top: 1.5rem;
+  margin-bottom: 2rem; /* spacing below buttons */
+}
+
+/* Dedicated toggle / controls row used on Gallery and other pages */
+.controls-row,
+.toggle-row,
+.gallery-controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 2.5rem; /* more breathing room between buttons and content */
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Toggle small style adjustment */
+.controls-row .btn,
+.gallery-controls .btn {
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
 }
 
 /* =======================
@@ -381,6 +410,7 @@ main {
   display: flex;
   flex-direction: column;
   gap: 22px;
+  margin-bottom: 1.8rem; /* Added spacing under form */
 }
 .uploader-input {
   width: 100%;
@@ -417,6 +447,7 @@ main {
   align-items: center;
   gap: 12px;
   margin-top: 10px;
+  margin-bottom: 2rem; /* Added spacing below upload buttons */
 }
 .upload-actions .btn {
   min-width: 160px;
@@ -476,7 +507,7 @@ main {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
-  margin-top: 32px;
+  margin-top: 0; /* grid spacing will be handled by the card / controls row above */
 }
 
 .photo {
@@ -528,16 +559,18 @@ main {
 
 .lightbox-content {
   position: relative;
-  max-width: 90vw;
-  max-height: 80vh;
+  width: 100%;
+  max-width: 1100px; /* limits max width on large screens */
+  max-height: 85vh;   /* limits height so content is never taller than viewport */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .lightbox-media {
+  width: auto;
   max-width: 100%;
-  max-height: 100%;
+  max-height: 85vh;
   object-fit: contain;
   border-radius: 12px;
   box-shadow: 0 8px 28px rgba(0,0,0,0.35);
@@ -546,7 +579,7 @@ main {
 }
 
 .lightbox-media-zoomed {
-  transform: scale(1.3);
+  transform: scale(1.25); /* slightly smaller zoom to avoid excessively large images */
   cursor: zoom-out;
 }
 
@@ -571,7 +604,7 @@ main {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 3rem;
+  font-size: 2.4rem;
   color: white;
   background: rgba(0,0,0,0.4);
   border: none;
@@ -579,9 +612,9 @@ main {
   padding: 0.3rem 0.6rem;
   border-radius: 50%;
   z-index: 2100;
-  transition: background 0.3s ease;
-  width: 50px;
-  height: 50px;
+  transition: background 0.3s ease, transform 0.2s ease;
+  width: 52px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -589,7 +622,7 @@ main {
 
 .lightbox-nav:hover {
   background: rgba(0,0,0,0.65);
-  transform: translateY(-50%) scale(1.1);
+  transform: translateY(-50%) scale(1.05);
 }
 
 .lightbox-nav-left { left: 20px; }
@@ -614,28 +647,30 @@ main {
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-/* Video-specific styles for mobile */
+/* Video-specific styles for lightbox/mobile */
 .lightbox-media video {
   width: auto;
   max-width: 100%;
   height: auto;
-  max-height: 80vh;
+  max-height: 85vh;
 }
 
 /* =======================
    Responsive Fixes
 ======================= */
 @media (max-width: 900px) {
-  .hero { 
-    flex-direction: column; 
+  .hero {
+    flex-direction: column;
     text-align: center;
-    padding: 18px; 
+    padding: 18px;
   }
   .hero-left, .hero-right { width: 100%; }
   .preview-grid { grid-template-columns: repeat(2, 1fr); }
   .nav { display: none; }
   .mobile-toggle { display: flex; }
-  .lightbox-nav { font-size: 2rem; }
+  .lightbox-nav { font-size: 2rem; width: 44px; height: 44px; }
+  .controls-row { margin-bottom: 1.6rem; }
+  .cta-row { margin-bottom: 1.4rem; }
 }
 
 @media (max-width: 768px) {
@@ -649,10 +684,24 @@ main {
   .lightbox-close { top: 15px; right: 20px; font-size: 32px; }
   .lightbox-content { max-width: 98%; max-height: 85vh; }
   .lightbox-media { max-height: 85vh; }
-  .lightbox-media-zoomed { transform: scale(1.4); }
+  .lightbox-media-zoomed { transform: scale(1.35); }
+  .gallery-grid { gap: 14px; }
 }
 
 @media (max-width: 600px) {
-  .gallery-grid { grid-template-columns: 1fr; }
+  .gallery-grid { grid-template-columns: 1fr; gap: 12px; }
   .upload-card { margin: 30px 16px; padding: 28px 20px; }
+  .controls-row { margin-bottom: 1rem; }
+}
+
+/* small helpers for centering content inside .photo when overlay icons are used */
+.photo .overlay-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: white;
+  font-size: 2rem;
 }
