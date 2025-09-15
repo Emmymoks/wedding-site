@@ -84,7 +84,7 @@ body {
 /* small utility */
 .text-muted { color: var(--muted); font-size: .95rem; }
 
-/* utility margin helpers used in React markup */
+/* utility margin helpers */
 .mb-6 { margin-bottom: 1.5rem !important; }
 .mb-8 { margin-bottom: 2rem !important; }
 .mb-10 { margin-bottom: 2.5rem !important; }
@@ -611,34 +611,39 @@ main {
 }
 
 .lightbox-nav:hover {
-  background: rgba(0,0,0,0.65);
-  transform: scale(1.08);
+  background: rgba(0,0,0,0.6);
+  transform: scale(1.1);
 }
 
 .lightbox-nav-left { left: 25px; }
 .lightbox-nav-right { right: 25px; }
 
 /* =======================
-   Responsive Design
+   Responsive
 ======================= */
+@media (max-width: 992px) {
+  .preview-grid { grid-template-columns: repeat(2, 1fr); }
+  .hero { padding: 20px; }
+}
+
 @media (max-width: 768px) {
-  .header { padding: 14px 20px; }
-  .hero { flex-direction: column; text-align: center; padding: 20px; }
-  .hero-left, .hero-right { width: 100%; }
-  .hero-img-wrapper { max-width: 100%; }
+  .header { padding: 14px 18px; }
   .nav { display: none; }
   .mobile-toggle { display: flex; }
-  main { padding: 20px; }
-  .gallery-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  main { padding: 18px; margin-top: 10px; }
   .preview-grid { grid-template-columns: repeat(2, 1fr); }
-  .lightbox-nav { font-size: 1.8rem; width: 42px; height: 42px; }
-  .lightbox-close { font-size: 1.6rem; }
+  .hero { flex-direction: column; text-align: center; gap: 1.5rem; }
+  .hero-left, .hero-right { flex: 1 1 100%; }
+  .gallery-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
+  .lightbox-content { max-width: 100%; max-height: 90vh; }
+  .lightbox-media { max-height: 80vh; }
+  .lightbox-close { top: 15px; right: 20px; font-size: 1.8rem; }
+  .lightbox-nav { font-size: 1.8rem; width: 44px; height: 44px; }
 }
 
 @media (max-width: 480px) {
-  .h1 { font-size: 1.9rem; }
-  .lead { font-size: 1rem; }
-  .btn { font-size: 0.9rem; padding: 0.5rem 1rem; }
+  .preview-grid { grid-template-columns: 1fr; }
   .gallery-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-  .lightbox-content { max-height: 75vh; }
+  .hero { padding: 16px; }
+  .cta-row, .controls-row, .gallery-controls, .upload-actions { gap: 10px; margin-bottom: 2rem; }
 }
