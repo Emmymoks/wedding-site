@@ -97,6 +97,7 @@ export default function Gallery() {
     }
   }, [])
 
+  // Keyboard navigation
   useEffect(() => {
     if (!lightboxOpen) return
     const handleKey = e => {
@@ -115,6 +116,7 @@ export default function Gallery() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [lightboxOpen, nextItem, prevItem, closeLightbox, currentIndex, allItems])
 
+  // Preload neighbors
   useEffect(() => {
     if (!lightboxOpen || allItems.length === 0) return
     const preload = index => {
@@ -169,62 +171,8 @@ export default function Gallery() {
           </motion.button>
         </div>
 
-        {/* All */}
-        {view === "all" && (
-          <>
-            {/* Photos */}
-            <motion.div className="card mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <h2>Photos</h2>
-              <div className="gallery-grid">
-                {images.map((i, idx) => (
-                  <motion.div
-                    key={i.id}
-                    className="photo"
-                    whileHover={{ scale: 1.03 }}
-                    onClick={() => openLightbox(idx)}
-                  >
-                    <img
-                      src={`${base}/api/files/${i.id}?thumb=1`}
-                      alt={i.originalname || 'gallery photo'}
-                      className="cursor-pointer"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Videos */}
-            <motion.div className="card mt-16" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <h2>Videos</h2>
-              <div className="gallery-grid">
-                {videos.map((v, idx) => (
-                  <motion.div
-                    key={v.id}
-                    className="photo relative"
-                    whileHover={{ scale: 1.03 }}
-                    onClick={() => openLightbox(images.length + idx)}
-                  >
-                    <img
-                      src={`${base}/api/files/${v.id}?thumb=1`}
-                      alt={v.originalname || 'gallery video'}
-                      className="cursor-pointer"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-3xl font-bold">
-                      ▶
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </>
-        )}
-
-        {/* Photos only */}
-        {view === "photos" && (
+        {/* Photo Grid */}
+        {view !== "videos" && (
           <motion.div className="card mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <h2>Photos</h2>
             <div className="gallery-grid">
@@ -248,9 +196,9 @@ export default function Gallery() {
           </motion.div>
         )}
 
-        {/* Videos only */}
-        {view === "videos" && (
-          <motion.div className="card mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        {/* Video Grid */}
+        {view !== "photos" && (
+          <motion.div className="card mt-16" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <h2>Videos</h2>
             <div className="gallery-grid">
               {videos.map((v, idx) => (
@@ -285,24 +233,13 @@ export default function Gallery() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closeLightbox}
-              style={{
-                position: 'fixed',
-                inset: 0,
-                width: '100vw',
-                height: '100vh',
-                backgroundColor: 'rgba(0,0,0,0.9)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 1000,
-              }}
             >
               <button className="lightbox-close" onClick={closeLightbox}>×</button>
 
               <motion.div
                 key={currentIndex}
                 className="lightbox-content"
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, ease: 'easeInOut' }}
@@ -314,17 +251,10 @@ export default function Gallery() {
                   else if (offset.x > 100) prevItem()
                 }}
                 onClick={e => e.stopPropagation()}
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
               >
                 {loading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
-                    <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="lightbox-loading">
+                    <div className="spinner"></div>
                   </div>
                 )}
 
@@ -333,9 +263,6 @@ export default function Gallery() {
                     src={`${base}/api/files/${allItems[currentIndex].id}`}
                     alt="preview"
                     className={`lightbox-media ${isZoomed ? 'lightbox-media-zoomed' : ''}`}
-                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                    loading="eager"
-                    decoding="sync"
                     onLoad={() => setLoading(false)}
                     onClick={toggleZoom}
                   />
@@ -350,7 +277,6 @@ export default function Gallery() {
                     preload="auto"
                     loop
                     className="lightbox-media lightbox-video"
-                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                     onLoadedData={handleVideoPlay}
                     onPlay={() => setLoading(false)}
                     onClick={e => e.stopPropagation()}
