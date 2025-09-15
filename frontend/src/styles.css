@@ -26,44 +26,6 @@ body {
   line-height: 1.5;
 }
 
-/* ---------------- FLOATING WEDDING SHAPES ---------------- */
-.homepage-wrapper {
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.floating-shapes {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  overflow: hidden;
-}
-
-.shape {
-  position: absolute;
-  font-size: 28px;
-  opacity: 0.5;
-  animation: floatUp 14s linear infinite;
-}
-
-.shape.heart { color: var(--accent-2); }
-.shape.ring { color: var(--accent-1); }
-
-.shape:nth-child(1) { left: 10%; animation-delay: 0s; }
-.shape:nth-child(2) { left: 25%; animation-delay: 3s; font-size: 34px; }
-.shape:nth-child(3) { left: 50%; animation-delay: 6s; font-size: 22px; }
-.shape:nth-child(4) { left: 70%; animation-delay: 1s; font-size: 30px; }
-.shape:nth-child(5) { left: 85%; animation-delay: 4s; font-size: 40px; }
-
-@keyframes floatUp {
-  0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-  10% { opacity: 0.6; }
-  90% { opacity: 0.6; }
-  100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
-}
-
 /* Layout */
 .header {
   display: flex;
