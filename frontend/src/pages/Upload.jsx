@@ -48,19 +48,22 @@ export default function Upload() {
   }
 
   return (
-    <div className="relative">
-      {/* Floating animated shapes */}
+    <div className="space-y-6 relative">
+      {/* Floating Background Shapes (same as Home.jsx) */}
       <div className="floating-shapes">
-        {/* Hearts */}
-        <span className="shape heart" />
-        <span className="shape heart delay-1" />
-        <span className="shape heart delay-2" />
-        {/* Rings */}
-        <span className="shape ring" />
-        <span className="shape ring delay-1" />
-        <span className="shape ring delay-2" />
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
       </div>
 
+      {/* Upload Card */}
       <motion.div
         className="card upload-card relative z-10"
         initial={{ opacity: 0, y: 30 }}
