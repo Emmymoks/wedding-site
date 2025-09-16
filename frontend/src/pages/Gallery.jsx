@@ -5,9 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 export default function Gallery() {
   const [images, setImages] = useState([])
   const [videos, setVideos] = useState([])
+  const [allItems, setAllItems] = useState([])
+  const [filteredItems, setFilteredItems] = useState([])
+  const [filter, setFilter] = useState('all')
+
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [allItems, setAllItems] = useState([])
   const [loading, setLoading] = useState(false)
   const [isZoomed, setIsZoomed] = useState(false)
   const videoRef = useRef(null)
@@ -30,10 +33,20 @@ export default function Gallery() {
         ...vidRes.data.map(v => ({ ...v, type: 'video' }))
       ]
       setAllItems(combined)
+      setFilteredItems(combined) // default view is all
     } catch (e) {
       console.error(e)
     }
   }
+
+  // Apply filter
+  useEffect(() => {
+    if (filter === 'all') {
+      setFilteredItems(allItems)
+    } else {
+      setFilteredItems(allItems.filter(item => item.type === filter))
+    }
+  }, [filter, allItems])
 
   const openLightbox = useCallback(index => {
     setCurrentIndex(index)
@@ -45,49 +58,41 @@ export default function Gallery() {
   const closeLightbox = useCallback(() => {
     setLightboxOpen(false)
     setIsZoomed(false)
-    // Pause any playing video when closing lightbox
-    if (videoRef.current) {
-      videoRef.current.pause()
-    }
+    if (videoRef.current) videoRef.current.pause()
   }, [])
 
   const nextItem = useCallback(() => {
     setCurrentIndex(prev => {
-      const next = (prev + 1) % allItems.length
+      const next = (prev + 1) % filteredItems.length
       setLoading(true)
       setIsZoomed(false)
       return next
     })
-  }, [allItems])
+  }, [filteredItems])
 
   const prevItem = useCallback(() => {
     setCurrentIndex(prev => {
-      const prevIdx = (prev - 1 + allItems.length) % allItems.length
+      const prevIdx = (prev - 1 + filteredItems.length) % filteredItems.length
       setLoading(true)
       setIsZoomed(false)
       return prevIdx
     })
-  }, [allItems])
+  }, [filteredItems])
 
   const toggleZoom = useCallback(() => {
-    if (allItems[currentIndex]?.type === 'image') {
+    if (filteredItems[currentIndex]?.type === 'image') {
       setIsZoomed(prev => !prev)
     }
-  }, [currentIndex, allItems])
+  }, [currentIndex, filteredItems])
 
-  // Handle video play on mobile
   const handleVideoPlay = useCallback(() => {
     setLoading(false)
     if (videoRef.current) {
-      // On mobile, we need to explicitly play the video
       const playPromise = videoRef.current.play()
       if (playPromise !== undefined) {
         playPromise.catch(error => {
           console.log("Auto-play was prevented:", error)
-          // Show controls if autoplay fails
-          if (videoRef.current) {
-            videoRef.current.controls = true
-          }
+          if (videoRef.current) videoRef.current.controls = true
         })
       }
     }
@@ -100,88 +105,110 @@ export default function Gallery() {
       if (e.key === 'ArrowRight') nextItem()
       if (e.key === 'ArrowLeft') prevItem()
       if (e.key === 'Escape') closeLightbox()
-      if (e.key === ' ' && allItems[currentIndex]?.type === 'video') {
+      if (e.key === ' ' && filteredItems[currentIndex]?.type === 'video') {
         e.preventDefault()
         if (videoRef.current) {
-          if (videoRef.current.paused) {
-            videoRef.current.play()
-          } else {
-            videoRef.current.pause()
-          }
+          if (videoRef.current.paused) videoRef.current.play()
+          else videoRef.current.pause()
         }
       }
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [lightboxOpen, nextItem, prevItem, closeLightbox, currentIndex, allItems])
+  }, [lightboxOpen, nextItem, prevItem, closeLightbox, currentIndex, filteredItems])
 
-  // Preload next/previous images for smoother UX
+  // Preload next/previous images
   useEffect(() => {
-    if (!lightboxOpen || allItems.length === 0) return
+    if (!lightboxOpen || filteredItems.length === 0) return
     const preload = index => {
-      const item = allItems[index]
+      const item = filteredItems[index]
       if (!item) return
       if (item.type === 'image') {
         const img = new Image()
         img.src = `${base}/api/files/${item.id}`
       }
     }
-    preload((currentIndex + 1) % allItems.length)
-    preload((currentIndex - 1 + allItems.length) % allItems.length)
-  }, [lightboxOpen, currentIndex, allItems, base])
+    preload((currentIndex + 1) % filteredItems.length)
+    preload((currentIndex - 1 + filteredItems.length) % filteredItems.length)
+  }, [lightboxOpen, currentIndex, filteredItems, base])
 
   return (
-    <div className="space-y-6">
-      {/* Images */}
+    <div className="space-y-6 relative">
+      {/* Floating Background Shapes */}
+      <div className="floating-shapes">
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
+      </div>
+
+      {/* Filter Buttons */}
+      <div className="card flex gap-3 justify-center">
+        <button
+          className={`btn ${filter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setFilter('all')}
+        >
+          All
+        </button>
+        <button
+          className={`btn ${filter === 'image' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setFilter('image')}
+        >
+          Photos
+        </button>
+        <button
+          className={`btn ${filter === 'video' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setFilter('video')}
+        >
+          Videos
+        </button>
+      </div>
+
+      {/* Gallery Grid */}
       <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <h2>Photos</h2>
+        <h2>{filter === 'all' ? 'All Items' : filter === 'image' ? 'Photos' : 'Videos'}</h2>
         <div className="gallery-grid">
-          {images.map((i, idx) => (
+          {filteredItems.map((item, idx) => (
             <motion.div
-              key={i.id}
-              className="photo"
+              key={item.id}
+              className="photo relative"
               whileHover={{ scale: 1.03 }}
               onClick={() => openLightbox(idx)}
             >
-              <img
-                src={`${base}/api/files/${i.id}?thumb=1`}
-                alt={i.originalname || 'gallery photo'}
-                className="cursor-pointer"
-                loading="lazy"
-                decoding="async"
-              />
+              {item.type === 'image' ? (
+                <img
+                  src={`${base}/api/files/${item.id}?thumb=1`}
+                  alt={item.originalname || 'gallery photo'}
+                  className="cursor-pointer"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : (
+                <>
+                  <img
+                    src={`${base}/api/files/${item.id}?thumb=1`}
+                    alt={item.originalname || 'gallery video'}
+                    className="cursor-pointer"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-3xl font-bold">
+                    ▶
+                  </div>
+                </>
+              )}
             </motion.div>
           ))}
         </div>
       </motion.div>
 
-      {/* Videos */}
-      <motion.div className="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <h2>Videos</h2>
-        <div className="gallery-grid">
-          {videos.map((v, idx) => (
-            <motion.div
-              key={v.id}
-              className="photo relative"
-              whileHover={{ scale: 1.03 }}
-              onClick={() => openLightbox(images.length + idx)}
-            >
-              <img
-                src={`${base}/api/files/${v.id}?thumb=1`}
-                alt={v.originalname || 'gallery video'}
-                className="cursor-pointer"
-                loading="lazy"
-                decoding="async"
-              />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-3xl font-bold">
-                ▶
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Lightbox Overlay */}
+      {/* Lightbox Overlay (unchanged) */}
       <AnimatePresence>
         {lightboxOpen && (
           <motion.div
@@ -209,18 +236,17 @@ export default function Gallery() {
                 if (offset.x < -100) nextItem()
                 else if (offset.x > 100) prevItem()
               }}
-              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on content
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Spinner */}
               {loading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
                   <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
                 </div>
               )}
 
-              {allItems[currentIndex]?.type === 'image' ? (
+              {filteredItems[currentIndex]?.type === 'image' ? (
                 <img
-                  src={`${base}/api/files/${allItems[currentIndex].id}`}
+                  src={`${base}/api/files/${filteredItems[currentIndex].id}`}
                   alt="preview"
                   className={`lightbox-media ${isZoomed ? 'lightbox-media-zoomed' : ''}`}
                   loading="eager"
@@ -231,7 +257,7 @@ export default function Gallery() {
               ) : (
                 <video
                   ref={videoRef}
-                  src={`${base}/api/files/${allItems[currentIndex].id}`}
+                  src={`${base}/api/files/${filteredItems[currentIndex].id}`}
                   controls
                   autoPlay
                   playsInline
@@ -240,13 +266,12 @@ export default function Gallery() {
                   className="lightbox-media lightbox-video"
                   onLoadedData={handleVideoPlay}
                   onPlay={() => setLoading(false)}
-                  onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on video
+                  onClick={(e) => e.stopPropagation()}
                 />
               )}
             </motion.div>
 
-            {/* Navigation buttons */}
-            {allItems.length > 1 && (
+            {filteredItems.length > 1 && (
               <>
                 <button 
                   className="lightbox-nav lightbox-nav-left" 
