@@ -35,7 +35,16 @@ export default function Home() {
     : fallback
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Floating rings and hearts */}
+      <div className="floating-shapes">
+        <span className="shape ring">◯</span>
+        <span className="shape heart">❤</span>
+        <span className="shape ring">◯</span>
+        <span className="shape heart">❤</span>
+        <span className="shape ring">◯</span>
+      </div>
+
       <motion.section
         className="hero"
         initial={{ opacity: 0 }}
@@ -58,8 +67,8 @@ export default function Home() {
             transition={{ delay: 0.2 }}
           >
             Dear friends & family, we're so happy you're here. This page is a place to share memories: photos,
-            videos and messages. Use the upload page to send moments you captured at our wedding. everything is approved by our admin
-            team before appearing in the gallery.
+            videos and messages. Use the upload page to send moments you captured at our wedding. Everything is
+            approved by our admin team before appearing in the gallery.
           </motion.p>
 
           <div className="cta-row">
