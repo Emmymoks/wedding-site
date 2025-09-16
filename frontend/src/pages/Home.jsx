@@ -36,13 +36,18 @@ export default function Home() {
 
   return (
     <div className="space-y-6 relative">
-      {/* Floating rings and hearts */}
+      {/* Floating Background Shapes */}
       <div className="floating-shapes">
-        <span className="shape ring">◯</span>
-        <span className="shape heart">❤</span>
-        <span className="shape ring">◯</span>
-        <span className="shape heart">❤</span>
-        <span className="shape ring">◯</span>
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
+        <div className="shape ring">💍</div>
+        <div className="shape heart">❤</div>
       </div>
 
       <motion.section
