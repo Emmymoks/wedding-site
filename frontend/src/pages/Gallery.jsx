@@ -58,7 +58,9 @@ export default function Gallery() {
   const closeLightbox = useCallback(() => {
     setLightboxOpen(false)
     setIsZoomed(false)
-    if (videoRef.current) videoRef.current.pause()
+    if (videoRef.current) {
+      videoRef.current.pause()
+    }
   }, [])
 
   const nextItem = useCallback(() => {
@@ -208,7 +210,7 @@ export default function Gallery() {
         </div>
       </motion.div>
 
-      {/* Lightbox Overlay (unchanged) */}
+      {/* Lightbox Overlay */}
       <AnimatePresence>
         {lightboxOpen && (
           <motion.div
@@ -260,6 +262,7 @@ export default function Gallery() {
                   src={`${base}/api/files/${filteredItems[currentIndex].id}`}
                   controls
                   autoPlay
+                  loop
                   playsInline
                   muted
                   preload="auto"
