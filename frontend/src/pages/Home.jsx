@@ -23,9 +23,7 @@ export default function Home() {
 
   // static fallback thumbnails if API returns nothing
   const fallback = [
-    'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0018.jpg?tr=w-300,h-200,fo-auto',
     'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0021.jpg?tr=w-300,h-200,fo-auto',
-    'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0024.jpg?tr=w-300,h-200,fo-auto',
     'https://ik.imagekit.io/emmymoks/IMG-20250914-WA0022.jpg?tr=w-300,h-200,fo-auto'
   ]
 
