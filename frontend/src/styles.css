@@ -24,6 +24,46 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ---------------- FLOATING BACKGROUND SHAPES ----------------
+   Present on all pages (matches your markup: .floating-shapes > .shape)
+-----------------------------------------------------------------*/
+.floating-shapes {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.shape {
+  position: absolute;
+  font-size: 28px;
+  opacity: 0.6;
+  will-change: transform, opacity;
+  animation: floatUp 14s linear infinite;
+  transform-origin: center;
+}
+
+.shape.heart { color: var(--accent-2); }
+.shape.ring  { color: var(--accent-1); }
+
+/* individual placement (adjust as needed) */
+.floating-shapes .shape:nth-child(1) { left: 8%;  bottom: -10vh; animation-delay: 0s; font-size: 30px; opacity: 0.55; }
+.floating-shapes .shape:nth-child(2) { left: 24%; bottom: -20vh; animation-delay: 3s; font-size: 40px; opacity: 0.45; }
+.floating-shapes .shape:nth-child(3) { left: 50%; bottom: -15vh; animation-delay: 6s; font-size: 26px; opacity: 0.5; }
+.floating-shapes .shape:nth-child(4) { left: 70%; bottom: -18vh; animation-delay: 1s; font-size: 34px; opacity: 0.5; }
+.floating-shapes .shape:nth-child(5) { left: 86%; bottom: -12vh; animation-delay: 4s; font-size: 44px; opacity: 0.45; }
+
+@keyframes floatUp {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.6; }
+  50%  { transform: translateY(-35vh) rotate(90deg); opacity: 0.5; }
+  90%  { opacity: 0.5; }
+  100% { transform: translateY(-70vh) rotate(360deg); opacity: 0; }
 }
 
 /* Layout */
@@ -118,6 +158,8 @@ main {
   margin: 20px auto 80px;
   padding: 24px;
   width: calc(100% - 48px);
+  position: relative;
+  z-index: 10;
 }
 
 /* Card */
@@ -159,7 +201,16 @@ main {
 }
 
 /* Buttons */
-.cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+/* consistent spacing below buttons across pages; gallery uses .gallery-controls */
+.cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.gallery-controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 3.5rem; /* guaranteed breathing room between buttons and content */
+  align-items: center;
+  flex-wrap: wrap;
+}
 .btn {
   border: 0;
   padding: 10px 16px;
@@ -167,6 +218,7 @@ main {
   font-weight: 700;
   cursor: pointer;
   transition: transform .18s ease, box-shadow .18s ease;
+  margin-bottom: 12px; /* extra vertical spacing to ensure separation on wrap */
 }
 .btn-primary {
   background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
@@ -384,12 +436,18 @@ main {
   .nav { display: none; }
   .mobile-toggle { display: flex; }
 }
+
+/* On mobile show 2 items per row in the gallery (per your requirement) */
 @media (max-width: 600px) {
-  .gallery-grid { grid-template-columns: 1fr; }
+  .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
   .upload-card { margin: 30px 16px; padding: 28px 20px; }
+  main { padding: 18px; }
+  .cta-row, .gallery-controls, .upload-actions { margin-bottom: 20px; gap: 10px; }
 }
 
-/* ---------------- LIGHTBOX ---------------- */
+/* ---------------- LIGHTBOX ----------------
+   You asked not to change lightbox settings — left intact (kept styling consistent)
+--------------------------------------------------------------------------*/
 .lightbox-overlay {
   position: fixed;
   inset: 0;
@@ -486,43 +544,38 @@ main {
   right: 20px;
 }
 
-/* Mobile Responsive Adjustments */
+/* Mobile Responsive Adjustments for lightbox */
 @media (max-width: 768px) {
   .lightbox-nav {
     width: 40px;
     height: 40px;
     font-size: 20px;
   }
-  
-  .lightbox-nav-left {
-    left: 10px;
-  }
-  
-  .lightbox-nav-right {
-    right: 10px;
-  }
-  
+
+  .lightbox-nav-left { left: 10px; }
+  .lightbox-nav-right { right: 10px; }
+
   .lightbox-close {
     top: 15px;
     right: 20px;
     font-size: 32px;
   }
-  
+
   .lightbox-content {
     max-width: 98%;
     max-height: 85vh;
   }
-  
+
   .lightbox-media {
     max-height: 85vh;
   }
-  
+
   .lightbox-media-zoomed {
     transform: scale(1.4);
   }
 }
 
-/* Video-specific styles for mobile */
+/* Video-specific styles for lightbox */
 .lightbox-media video {
   width: auto;
   max-width: 100%;
@@ -547,4 +600,12 @@ main {
 
 @keyframes spin {
   to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Accessibility helper */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
