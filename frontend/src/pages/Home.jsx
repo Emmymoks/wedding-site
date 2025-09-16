@@ -14,7 +14,7 @@ export default function Home() {
         const res = await fetch(`${base}/api/gallery?type=image`)
         if (!res.ok) return
         const data = await res.json()
-        setLatest(data.slice(0, 4))
+        setLatest(data.slice(0, 2))
       } catch (e) {
         // silently ignore — preview will be static
       }
